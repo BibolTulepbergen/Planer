@@ -19,7 +19,6 @@ import {
   AppBar,
   Toolbar,
   IconButton,
-  Grid,
   Paper,
   Divider,
   useMediaQuery,
@@ -171,9 +170,19 @@ function App({ mode, setMode, onResetToSystem }: AppProps) {
           Демонстрация MUI компонентов
         </Typography>
 
-        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(3, 1fr)',
+            },
+            gap: { xs: 2, sm: 3, md: 4 },
+          }}
+        >
           {/* Card Component */}
-          <Grid item xs={12} sm={6} md={4}>
+          <Box>
             <Card
               sx={{
                 height: '100%',
@@ -205,10 +214,10 @@ function App({ mode, setMode, onResetToSystem }: AppProps) {
                 <Button size={isDesktop ? 'medium' : 'small'}>Действие</Button>
               </CardActions>
             </Card>
-          </Grid>
+          </Box>
 
           {/* Avatar with Badge */}
-          <Grid item xs={12} sm={6} md={4}>
+          <Box>
             <Paper
               sx={{
                 p: { xs: 2, sm: 3, md: 4 },
@@ -271,10 +280,10 @@ function App({ mode, setMode, onResetToSystem }: AppProps) {
                 Различные варианты аватаров с бейджами
               </Typography>
             </Paper>
-          </Grid>
+          </Box>
 
           {/* Additional Card for Desktop */}
-          <Grid item xs={12} sm={6} md={4} sx={{ display: { xs: 'none', md: 'block' } }}>
+          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
             <Card
               sx={{
                 height: '100%',
@@ -300,10 +309,14 @@ function App({ mode, setMode, onResetToSystem }: AppProps) {
                 <Button size={isDesktop ? 'medium' : 'small'}>Действие 2</Button>
               </CardActions>
             </Card>
-          </Grid>
+          </Box>
 
           {/* Navigation Example */}
-          <Grid item xs={12} md={8}>
+          <Box
+            sx={{
+              gridColumn: { xs: '1 / -1', md: 'span 2' },
+            }}
+          >
             <Paper sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
               <Typography variant="h6" gutterBottom>
                 Навигация
@@ -333,10 +346,14 @@ function App({ mode, setMode, onResetToSystem }: AppProps) {
                 ))}
               </Box>
             </Paper>
-          </Grid>
+          </Box>
 
           {/* Drawer Info */}
-          <Grid item xs={12} md={4}>
+          <Box
+            sx={{
+              gridColumn: { xs: '1 / -1', md: '3 / 4' },
+            }}
+          >
             <Card sx={{ height: '100%' }}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -357,8 +374,8 @@ function App({ mode, setMode, onResetToSystem }: AppProps) {
                 </Button>
               </CardContent>
             </Card>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
       </Container>
 
       {/* Modal */}
