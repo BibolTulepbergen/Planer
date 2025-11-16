@@ -5,6 +5,7 @@ const config: CapacitorConfig = {
   appName: 'planer',
   webDir: 'dist/client',
   server: {
+    url: 'https://planer.moldahasank.workers.dev',
     androidScheme: 'https'
   }
 };
