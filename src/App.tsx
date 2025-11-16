@@ -36,7 +36,6 @@ import {
   DarkMode as DarkModeIcon,
 } from '@mui/icons-material'
 import './App.css'
-
 interface AppProps {
   mode: 'light' | 'dark'
   setMode: (mode: 'light' | 'dark') => void
