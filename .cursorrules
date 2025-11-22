@@ -1,0 +1,119 @@
+# Project Rules for Planer
+
+## Tech Stack
+This project uses the following technology stack:
+- **Frontend**: Vite + React 19 + TypeScript + Material-UI (MUI)
+- **Backend**: Cloudflare Workers with Hono framework
+- **Database**: Cloudflare D1 (SQLite-based)
+  - Database name: planer-db
+  - Database ID: 55f3bc53-6889-4cf3-a22b-9bdd763ee4d1
+  - Region: APAC
+- **Authentication**: Firebase Auth with JWT tokens
+- **Mobile**: Capacitor for Android applications
+- **API**: REST API architecture
+
+## Language Rules
+
+### Response Language
+- All explanations, descriptions, and conversational text MUST be in Russian
+- All technical discussions with the user MUST be in Russian
+- Never switch to English when explaining concepts or answering questions
+
+### Code Comments
+- ALL code comments MUST be written in English
+- NEVER write code comments in Russian or any other language
+- Keep comments concise and meaningful
+
+### Log Messages
+- ALL console output, error messages, and debug text MUST be in English
+- This includes: console.log(), console.error(), console.warn(), etc.
+- All user-facing error messages in the application can be in Russian
+
+## Code Quality Standards
+
+### Simplicity First
+- Always choose the simplest possible implementation
+- Avoid over-engineering solutions
+- Prefer clear, readable code over clever code
+- If there's a simpler way to do something, always use it
+
+### Code Style
+- Write clear, simple, and readable code
+- Use consistent naming conventions
+- Follow TypeScript best practices
+- Use functional components in React
+- Prefer composition over inheritance
+
+### Preserve Functionality
+- ALWAYS preserve all existing functionality when adding or modifying features
+- Never break existing features when implementing new ones
+- Test changes to ensure nothing is broken
+
+### Optimization
+- Continuously simplify and optimize code without changing its intended behavior
+- Remove unused code and dependencies
+- Keep the codebase clean and maintainable
+
+## Documentation Rules
+- **NEVER** automatically create documentation files
+- **NEVER** create multiple MD files without explicit request
+- **ONLY** create documentation when explicitly asked by the user
+- Focus on code implementation, not documentation
+
+## Technology Changes
+- **ALWAYS** ask the user before using new technologies or languages
+- **NEVER** introduce new dependencies without approval
+- Stick to the established tech stack unless user requests otherwise
+
+## Context7 Integration
+- Always use Context7 MCP tools when you need:
+  - Code generation assistance
+  - Setup or configuration steps
+  - Library/API documentation
+- Automatically resolve library IDs and get documentation using Context7
+- No need to explicitly ask the user to use Context7
+
+## Project Structure
+- `/src` - Frontend React application
+- `/worker` - Cloudflare Workers backend code
+- `/migrations` - Database migration files
+- `/android` - Capacitor Android application
+- `/dist` - Build output directory
+
+## API Development
+- Use Hono framework for API routes
+- Implement proper JWT authentication with Firebase
+- Use Cloudflare D1 for database operations
+- Follow REST API conventions
+- Implement proper error handling
+
+## React Development
+- Use React 19 features and best practices
+- Utilize Material-UI components consistently
+- Implement responsive design
+- Use TypeScript for type safety
+- Follow React hooks best practices
+
+## Database Operations
+- Use Cloudflare D1 for all database operations
+- Write migrations for schema changes
+- Use prepared statements to prevent SQL injection
+- Keep database operations efficient
+
+## Build and Deployment
+- Use Vite for frontend builds
+- Use Wrangler for Cloudflare Workers deployment
+- Ensure Capacitor builds work correctly for Android
+- Test builds before deployment
+
+## General Development Principles
+1. Write tests when necessary (but don't create test files automatically)
+2. Handle errors gracefully
+3. Log important operations (in English)
+4. Keep security in mind (especially with authentication)
+5. Optimize for performance
+6. Make code maintainable for future developers
+
+---
+**These rules must be followed consistently throughout the development process.**
+

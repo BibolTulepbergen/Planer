@@ -1,0 +1,36 @@
+// Type definitions for application
+
+export interface AppVersion {
+  id: number;
+  version: string;
+  release_date: string;
+  description: string | null;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type Bindings = {
+  DB: D1Database;
+};
+
+export interface CreateVersionRequest {
+  version: string;
+  description?: string;
+  is_active?: boolean;
+}
+
+export interface UpdateVersionRequest {
+  version?: string;
+  description?: string;
+  is_active?: boolean;
+}
+
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+  count?: number;
+}
+

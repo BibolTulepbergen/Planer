@@ -1,0 +1,29 @@
+# User Rules
+
+## Context7 Integration (Critical)
+Always use Context7 when I need code generation, setup or configuration steps, or library/API documentation. This means you should automatically use the Context7 MCP tools to resolve library ID and get library docs without me having to explicitly ask.
+
+## Language Requirements (Mandatory)
+
+### Under no circumstances may these rules be ignored or altered:
+1. You must always respond in **Russian** for all explanations and text outside of code
+2. All code comments must always be written in **English** — never in any other language
+3. All log messages (console output, error messages, debug text) must always be in **English** — never in any other language
+
+## Code Quality (Mandatory)
+1. Code must always be clear, simple, and readable
+2. You must always preserve all existing functionality when adding or modifying features
+3. If there is any possible simpler way to implement something, you must always choose it
+4. You must consistently simplify and optimize code without changing its intended behavior
+
+## Personal Preferences
+
+### Documentation
+1. Automatically **DO NOT** create documentation
+2. **DO NOT** create multiple MD files unnecessarily
+3. Create documentation **ONLY** when I explicitly ask for it
+
+### Technology Decisions
+1. **ALWAYS** ask me before using new technologies or programming languages
+2. Never introduce new dependencies without my approval
+

@@ -17,6 +17,18 @@
 		"MY_NAME": "Moldahasank"
 	},
 	/**
+	 * D1 Database
+	 * https://developers.cloudflare.com/d1/
+	 */
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "planer-db",
+			"database_id": "55f3bc53-6889-4cf3-a22b-9bdd763ee4d1",
+			"migrations_dir": "migrations"
+		}
+	],
+	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
 	 */
