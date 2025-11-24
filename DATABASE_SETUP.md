@@ -4,18 +4,18 @@
 
 ### 1. Создана база данных D1
 - **Название**: `planer-db`
-- **Database ID**: `55f3bc53-6889-4cf3-a22b-9bdd763ee4d1`
+- **Database ID**: `95f2e9ac-075e-487b-92ed-623fbc5d8be4`
 - **Регион**: APAC
-- **Binding**: `DB` (используется в worker'е как `env.DB`)
+- **Binding**: `DataBase` (используется в worker'е как `env.DataBase`)
 
 ### 2. Настроена конфигурация
 Файл `wrangler.jsonc` обновлен с правильными параметрами подключения:
 ```json
 "d1_databases": [
   {
-    "binding": "DB",
+    "binding": "DataBase",
     "database_name": "planer-db",
-    "database_id": "55f3bc53-6889-4cf3-a22b-9bdd763ee4d1",
+    "database_id": "95f2e9ac-075e-487b-92ed-623fbc5d8be4",
     "migrations_dir": "migrations"
   }
 ]
@@ -60,7 +60,7 @@ npm run db:list             # Список миграций
 ```typescript
 if (url.pathname === "/api/version") {
   try {
-    const result = await env.DB.prepare(
+    const result = await env.DataBase.prepare(
       "SELECT * FROM app_versions WHERE is_active = 1 ORDER BY created_at DESC LIMIT 1"
     ).first();
     
@@ -82,16 +82,16 @@ if (url.pathname === "/api/version") {
 ### Запрос к БД из worker'а
 ```typescript
 // Получить одну запись
-const result = await env.DB.prepare("SELECT * FROM app_versions WHERE id = ?")
+const result = await env.DataBase.prepare("SELECT * FROM app_versions WHERE id = ?")
   .bind(1)
   .first();
 
 // Получить все записи
-const results = await env.DB.prepare("SELECT * FROM app_versions")
+const results = await env.DataBase.prepare("SELECT * FROM app_versions")
   .all();
 
 // Вставить данные
-await env.DB.prepare("INSERT INTO app_versions (version, description) VALUES (?, ?)")
+await env.DataBase.prepare("INSERT INTO app_versions (version, description) VALUES (?, ?)")
   .bind("1.1.0", "New features")
   .run();
 ```
