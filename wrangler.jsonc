@@ -22,9 +22,9 @@
 	 */
 	"d1_databases": [
 		{
-			"binding": "DB",
+			"binding": "DataBase",
 			"database_name": "planer-db",
-			"database_id": "55f3bc53-6889-4cf3-a22b-9bdd763ee4d1",
+			"database_id": "95f2e9ac-075e-487b-92ed-623fbc5d8be4",
 			"migrations_dir": "migrations"
 		}
 	],
