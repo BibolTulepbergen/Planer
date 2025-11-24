@@ -5,7 +5,7 @@ import { errorHandler } from './middleware/errorHandler';
 import versions from './routes/versions';
 import type { Bindings } from './types';
 
-// Initialize Hono app
+// Initialize Hono app with Bindings for environment
 const app = new Hono<{ Bindings: Bindings }>();
 
 // Global middleware
@@ -13,14 +13,15 @@ app.use('*', logger());
 app.use('*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type'],
+  allowHeaders: ['Content-Type', 'Authorization'], // Added Authorization header
 }));
 
-// Simple test endpoint for Postman
+// Public test endpoint (no auth required)
 app.get('/api/test', (c) => {
   return c.json({
-    name: 'Бибол',
+    name: 'Planer API',
     connection: true,
+    message: 'Public endpoint - no authentication required',
   });
 });
 

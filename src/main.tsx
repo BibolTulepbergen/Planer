@@ -1,33 +1,36 @@
-import { StrictMode, useState, useEffect, useMemo } from 'react'
-import { createRoot } from 'react-dom/client'
-import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
-import './index.css'
-import App from './App.tsx'
+import { StrictMode, useState, useEffect, useMemo } from 'react';
+import { createRoot } from 'react-dom/client';
+import { ThemeProvider, createTheme, CssBaseline, Box, CircularProgress } from '@mui/material';
+import App from './App.tsx';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthPage } from './components/Auth/AuthPage';
+import { EmailVerification } from './components/Auth/EmailVerification';
+import './index.css';
 
-// Ключ для localStorage
-const THEME_STORAGE_KEY = 'app-theme-preference'
-const MANUAL_THEME_KEY = 'app-theme-manual'
+// Theme storage key
+const THEME_STORAGE_KEY = 'app-theme-preference';
+const MANUAL_THEME_KEY = 'app-theme-manual';
 
-// Определение системной темы
+// Get system theme
 const getSystemTheme = (): 'light' | 'dark' => {
   if (typeof window !== 'undefined' && window.matchMedia) {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
-  return 'light'
-}
+  return 'light';
+};
 
-// Получение начальной темы (приоритет: localStorage > системная тема)
+// Get initial theme
 const getInitialTheme = (): 'light' | 'dark' => {
   if (typeof window !== 'undefined') {
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as 'light' | 'dark' | null
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as 'light' | 'dark' | null;
     if (savedTheme === 'light' || savedTheme === 'dark') {
-      return savedTheme
+      return savedTheme;
     }
   }
-  return getSystemTheme()
-}
+  return getSystemTheme();
+};
 
-// Функция создания темы
+// Create theme function
 const createAppTheme = (mode: 'light' | 'dark') => {
   return createTheme({
     palette: {
@@ -40,13 +43,8 @@ const createAppTheme = (mode: 'light' | 'dark') => {
       },
     },
     typography: {
-      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      h4: {
-        fontSize: '1.75rem',
-        '@media (min-width: 600px)': {
-          fontSize: '2.125rem',
-        },
-      },
+      fontFamily:
+        'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     },
     components: {
       MuiButton: {
@@ -65,92 +63,117 @@ const createAppTheme = (mode: 'light' | 'dark') => {
         },
       },
     },
-    breakpoints: {
-      values: {
-        xs: 0,
-        sm: 600,
-        md: 900,
-        lg: 1200,
-        xl: 1536,
-      },
-    },
-  })
-}
+  });
+};
 
-// Компонент-обертка для управления темой
-function AppWithTheme() {
-  const [mode, setMode] = useState<'light' | 'dark'>(getInitialTheme)
+const AppWrapper = () => {
+  const [mode, setMode] = useState<'light' | 'dark'>(getInitialTheme);
   const [isManual, setIsManual] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem(MANUAL_THEME_KEY) === 'true'
+      return localStorage.getItem(MANUAL_THEME_KEY) === 'true';
     }
-    return false
-  })
+    return false;
+  });
+  const { user, loading } = useAuth();
 
-  // Сохранение темы в localStorage
+  // Save theme to localStorage
   const handleSetMode = (newMode: 'light' | 'dark', manual: boolean = false) => {
-    setMode(newMode)
-    setIsManual(manual)
+    setMode(newMode);
+    setIsManual(manual);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(THEME_STORAGE_KEY, newMode)
-      localStorage.setItem(MANUAL_THEME_KEY, manual.toString())
+      localStorage.setItem(THEME_STORAGE_KEY, newMode);
+      localStorage.setItem(MANUAL_THEME_KEY, manual.toString());
     }
-  }
+  };
 
-  // Сброс к системной теме
+  // Reset to system theme
   const handleResetToSystem = () => {
-    const systemTheme = getSystemTheme()
-    setMode(systemTheme)
-    setIsManual(false)
+    const systemTheme = getSystemTheme();
+    setMode(systemTheme);
+    setIsManual(false);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(THEME_STORAGE_KEY, systemTheme)
-      localStorage.setItem(MANUAL_THEME_KEY, 'false')
+      localStorage.setItem(THEME_STORAGE_KEY, systemTheme);
+      localStorage.setItem(MANUAL_THEME_KEY, 'false');
     }
-  }
+  };
 
+  // Listen to system theme changes
   useEffect(() => {
-    // Слушаем изменения системной темы только если тема не была установлена вручную
-    if (isManual) return
+    if (isManual) return;
 
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
     const handleChange = (e: MediaQueryListEvent) => {
       if (!isManual) {
-        const newMode = e.matches ? 'dark' : 'light'
-        setMode(newMode)
+        const newMode = e.matches ? 'dark' : 'light';
+        setMode(newMode);
         if (typeof window !== 'undefined') {
-          localStorage.setItem(THEME_STORAGE_KEY, newMode)
+          localStorage.setItem(THEME_STORAGE_KEY, newMode);
         }
       }
-    }
+    };
 
-    // Современный способ
     if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handleChange)
-      return () => mediaQuery.removeEventListener('change', handleChange)
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
     } else {
-      // Fallback для старых браузеров
-      mediaQuery.addListener(handleChange)
-      return () => mediaQuery.removeListener(handleChange)
+      mediaQuery.addListener(handleChange);
+      return () => mediaQuery.removeListener(handleChange);
     }
-  }, [isManual])
+  }, [isManual]);
 
-  const theme = useMemo(() => createAppTheme(mode), [mode])
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'background.default',
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
+  // Show auth page if user is not authenticated
+  if (!user) {
+    return <AuthPage />;
+  }
+
+  // Show email verification page if email is not verified
+  if (!user.emailVerified) {
+    return <EmailVerification />;
+  }
+
+  // Show main app if user is authenticated and email is verified
+  return (
+    <App
+      mode={mode}
+      setMode={(newMode) => handleSetMode(newMode, true)}
+      onResetToSystem={handleResetToSystem}
+    />
+  );
+};
+
+const ThemedApp = () => {
+  const theme = useMemo(() => createAppTheme('light'), []);
+  
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <App 
-        mode={mode} 
-        setMode={(newMode) => handleSetMode(newMode, true)} 
-        onResetToSystem={handleResetToSystem}
-      />
+      <AppWrapper />
     </ThemeProvider>
-  )
-}
+  );
+};
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AppWithTheme />
-  </StrictMode>,
-)
+    <AuthProvider>
+      <ThemedApp />
+    </AuthProvider>
+  </StrictMode>
+);

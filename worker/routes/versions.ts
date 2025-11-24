@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { getFirebaseToken } from '@hono/firebase-auth';
+import { firebaseAuth } from '../middleware/firebaseAuth';
 import type { 
   Bindings, 
   AppVersion, 
@@ -9,9 +11,17 @@ import type {
 
 const versions = new Hono<{ Bindings: Bindings }>();
 
+// Apply Firebase Auth middleware to all routes in this group
+versions.use('*', firebaseAuth());
+
 // GET /version - Get current active version
 versions.get('/version', async (c) => {
   try {
+    // Get Firebase token to verify user is authenticated
+    const firebaseToken = getFirebaseToken(c);
+    console.log('Authenticated user:', firebaseToken?.uid, firebaseToken?.email);
+    
+    // User is authenticated, proceed with query
     const result = await c.env.DataBase.prepare(
       'SELECT * FROM app_versions WHERE is_active = 1 ORDER BY created_at DESC LIMIT 1'
     ).first<AppVersion>();

@@ -1,4 +1,5 @@
 // Type definitions for application
+import type { VerifyFirebaseAuthEnv } from '@hono/firebase-auth';
 
 export interface AppVersion {
   id: number;
@@ -10,7 +11,8 @@ export interface AppVersion {
   updated_at: string;
 }
 
-export type Bindings = {
+// Extend VerifyFirebaseAuthEnv to include our custom bindings
+export type Bindings = VerifyFirebaseAuthEnv & {
   DataBase: D1Database;
 };
 
