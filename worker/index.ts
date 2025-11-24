@@ -19,7 +19,7 @@ app.use('*', cors({
 // Simple test endpoint for Postman
 app.get('/api/test', (c) => {
   return c.json({
-    name: 'Егор',
+    name: 'Бибол',
     connection: true,
   });
 });

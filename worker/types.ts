@@ -11,7 +11,7 @@ export interface AppVersion {
 }
 
 export type Bindings = {
-  DB: D1Database;
+  DataBase: D1Database;
 };
 
 export interface CreateVersionRequest {

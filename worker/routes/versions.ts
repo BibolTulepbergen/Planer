@@ -12,7 +12,7 @@ const versions = new Hono<{ Bindings: Bindings }>();
 // GET /version - Get current active version
 versions.get('/version', async (c) => {
   try {
-    const result = await c.env.DB.prepare(
+    const result = await c.env.DataBase.prepare(
       'SELECT * FROM app_versions WHERE is_active = 1 ORDER BY created_at DESC LIMIT 1'
     ).first<AppVersion>();
 
@@ -34,7 +34,7 @@ versions.get('/version', async (c) => {
 // GET /versions - Get all versions
 versions.get('/versions', async (c) => {
   try {
-    const { results } = await c.env.DB.prepare(
+    const { results } = await c.env.DataBase.prepare(
       'SELECT * FROM app_versions ORDER BY created_at DESC'
     ).all<AppVersion>();
 
@@ -59,7 +59,7 @@ versions.get('/version/:id', async (c) => {
   try {
     const id = parseInt(c.req.param('id'));
     
-    const result = await c.env.DB.prepare(
+    const result = await c.env.DataBase.prepare(
       'SELECT * FROM app_versions WHERE id = ?'
     )
       .bind(id)
@@ -107,12 +107,12 @@ versions.post('/version', async (c) => {
 
     // If new version is active, deactivate all others
     if (body.is_active) {
-      await c.env.DB.prepare(
+      await c.env.DataBase.prepare(
         'UPDATE app_versions SET is_active = 0'
       ).run();
     }
 
-    const result = await c.env.DB.prepare(
+    const result = await c.env.DataBase.prepare(
       'INSERT INTO app_versions (version, release_date, description, is_active) VALUES (?, datetime("now"), ?, ?)'
     )
       .bind(
@@ -123,7 +123,7 @@ versions.post('/version', async (c) => {
       .run();
 
     // Get the created record
-    const newVersion = await c.env.DB.prepare(
+    const newVersion = await c.env.DataBase.prepare(
       'SELECT * FROM app_versions WHERE id = ?'
     )
       .bind(result.meta.last_row_id)
@@ -155,7 +155,7 @@ versions.put('/version/:id', async (c) => {
     const body = await c.req.json<UpdateVersionRequest>();
 
     // Check if version exists
-    const existing = await c.env.DB.prepare(
+    const existing = await c.env.DataBase.prepare(
       'SELECT * FROM app_versions WHERE id = ?'
     )
       .bind(id)
@@ -173,7 +173,7 @@ versions.put('/version/:id', async (c) => {
 
     // If making version active, deactivate others
     if (body.is_active) {
-      await c.env.DB.prepare(
+      await c.env.DataBase.prepare(
         'UPDATE app_versions SET is_active = 0 WHERE id != ?'
       )
         .bind(id)
@@ -181,7 +181,7 @@ versions.put('/version/:id', async (c) => {
     }
 
     // Update version
-    await c.env.DB.prepare(
+    await c.env.DataBase.prepare(
       'UPDATE app_versions SET version = COALESCE(?, version), description = COALESCE(?, description), is_active = COALESCE(?, is_active), updated_at = datetime("now") WHERE id = ?'
     )
       .bind(
@@ -193,7 +193,7 @@ versions.put('/version/:id', async (c) => {
       .run();
 
     // Get updated record
-    const updated = await c.env.DB.prepare(
+    const updated = await c.env.DataBase.prepare(
       'SELECT * FROM app_versions WHERE id = ?'
     )
       .bind(id)
@@ -221,7 +221,7 @@ versions.delete('/version/:id', async (c) => {
     const id = parseInt(c.req.param('id'));
 
     // Check if version exists
-    const existing = await c.env.DB.prepare(
+    const existing = await c.env.DataBase.prepare(
       'SELECT * FROM app_versions WHERE id = ?'
     )
       .bind(id)
@@ -238,7 +238,7 @@ versions.delete('/version/:id', async (c) => {
     }
 
     // Delete version
-    await c.env.DB.prepare('DELETE FROM app_versions WHERE id = ?')
+    await c.env.DataBase.prepare('DELETE FROM app_versions WHERE id = ?')
       .bind(id)
       .run();
 

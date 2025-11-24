@@ -241,7 +241,7 @@ function App({ mode, setMode, onResetToSystem }: AppProps) {
                   <Avatar
                     sx={{ width: { xs: 56, sm: 64, md: 80 }, height: { xs: 56, sm: 64, md: 80 } }}
                     alt="User"
-                    src="/static/images/avatar/1.jpg"
+                    
                   >
                     U
                   </Avatar>
