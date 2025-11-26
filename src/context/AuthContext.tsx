@@ -41,6 +41,7 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAuthAction, setIsAuthAction] = useState(false);
 
   useEffect(() => {
     // Set persistence to session (will clear on tab close)
@@ -50,17 +51,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     });
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      // Check if token exists in localStorage
-      const storedToken = localStorage.getItem('authToken');
-      
-      // If user exists in Firebase but no token in localStorage, sign out
-      // This allows manual token deletion from console to log user out
-      if (user && !storedToken) {
-        console.log('Token removed manually, signing out...');
-        await signOut(auth);
-        setUser(null);
-        setLoading(false);
-        return;
+      // Don't check token during active auth actions (sign-in/sign-up)
+      if (!isAuthAction && user) {
+        const storedToken = localStorage.getItem('authToken');
+        
+        // If user exists in Firebase but no token in localStorage, sign out
+        // This allows manual token deletion from console to log user out
+        if (!storedToken) {
+          console.log('Token removed manually, signing out...');
+          await signOut(auth);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
       }
       
       setUser(user);
@@ -77,34 +80,46 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     });
 
     return unsubscribe;
-  }, []);
+  }, [isAuthAction]);
 
   const signUp = async (email: string, password: string): Promise<UserCredential> => {
-    // Set persistence before sign up (session-only)
-    await setPersistence(auth, browserSessionPersistence);
-    
-    const result = await createUserWithEmailAndPassword(auth, email, password);
-    
-    // Send email verification with continue URL
-    const continueUrl = window.location.origin; // https://planer.moldahasank.workers.dev
-    await sendEmailVerification(result.user, {
-      url: continueUrl,
-      handleCodeInApp: false,
-    });
-    
-    const token = await result.user.getIdToken();
-    localStorage.setItem('authToken', token);
-    return result;
+    try {
+      setIsAuthAction(true);
+      
+      // Set persistence before sign up (session-only)
+      await setPersistence(auth, browserSessionPersistence);
+      
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Send email verification with continue URL
+      const continueUrl = window.location.origin; // https://planer.moldahasank.workers.dev
+      await sendEmailVerification(result.user, {
+        url: continueUrl,
+        handleCodeInApp: false,
+      });
+      
+      const token = await result.user.getIdToken();
+      localStorage.setItem('authToken', token);
+      return result;
+    } finally {
+      setIsAuthAction(false);
+    }
   };
 
   const signIn = async (email: string, password: string): Promise<UserCredential> => {
-    // Set persistence before sign in (session-only)
-    await setPersistence(auth, browserSessionPersistence);
-    
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    const token = await result.user.getIdToken();
-    localStorage.setItem('authToken', token);
-    return result;
+    try {
+      setIsAuthAction(true);
+      
+      // Set persistence before sign in (session-only)
+      await setPersistence(auth, browserSessionPersistence);
+      
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const token = await result.user.getIdToken();
+      localStorage.setItem('authToken', token);
+      return result;
+    } finally {
+      setIsAuthAction(false);
+    }
   };
 
   const logout = async (): Promise<void> => {
