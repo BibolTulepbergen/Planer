@@ -22,9 +22,12 @@ const getSystemTheme = (): 'light' | 'dark' => {
 // Get initial theme
 const getInitialTheme = (): 'light' | 'dark' => {
   if (typeof window !== 'undefined') {
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as 'light' | 'dark' | null;
-    if (savedTheme === 'light' || savedTheme === 'dark') {
-      return savedTheme;
+    const isManual = localStorage.getItem(MANUAL_THEME_KEY) === 'true';
+    if (isManual) {
+      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as 'light' | 'dark' | null;
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        return savedTheme;
+      }
     }
   }
   return getSystemTheme();
