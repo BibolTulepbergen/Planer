@@ -7,6 +7,8 @@ import {
   onAuthStateChanged,
   sendEmailVerification,
   sendPasswordResetEmail,
+  browserSessionPersistence,
+  setPersistence,
 } from 'firebase/auth';
 import type { User, UserCredential } from 'firebase/auth';
 import { auth } from '../firebase/config';
@@ -41,7 +43,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Set persistence to session (will clear on tab close)
+    // Comment this line if you want tokens to persist across browser restarts
+    setPersistence(auth, browserSessionPersistence).catch((error) => {
+      console.error('Failed to set persistence:', error);
+    });
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // Check if token exists in localStorage
+      const storedToken = localStorage.getItem('authToken');
+      
+      // If user exists in Firebase but no token in localStorage, sign out
+      // This allows manual token deletion from console to log user out
+      if (user && !storedToken) {
+        console.log('Token removed manually, signing out...');
+        await signOut(auth);
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      
       setUser(user);
       
       // Store JWT token in localStorage when user signs in
@@ -59,6 +80,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const signUp = async (email: string, password: string): Promise<UserCredential> => {
+    // Set persistence before sign up (session-only)
+    await setPersistence(auth, browserSessionPersistence);
+    
     const result = await createUserWithEmailAndPassword(auth, email, password);
     
     // Send email verification with continue URL
@@ -74,6 +98,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const signIn = async (email: string, password: string): Promise<UserCredential> => {
+    // Set persistence before sign in (session-only)
+    await setPersistence(auth, browserSessionPersistence);
+    
     const result = await signInWithEmailAndPassword(auth, email, password);
     const token = await result.user.getIdToken();
     localStorage.setItem('authToken', token);
