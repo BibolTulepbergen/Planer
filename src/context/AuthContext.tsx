@@ -6,6 +6,7 @@ import {
   signOut,
   onAuthStateChanged,
   sendEmailVerification,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import type { User, UserCredential } from 'firebase/auth';
 import { auth } from '../firebase/config';
@@ -18,6 +19,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   getIdToken: () => Promise<string | null>;
   resendVerificationEmail: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -100,6 +102,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  const resetPassword = async (email: string): Promise<void> => {
+    const continueUrl = window.location.origin;
+    await sendPasswordResetEmail(auth, email, {
+      url: continueUrl,
+      handleCodeInApp: false,
+    });
+  };
+
   const value: AuthContextType = {
     user,
     loading,
@@ -108,6 +118,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     logout,
     getIdToken,
     resendVerificationEmail,
+    resetPassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

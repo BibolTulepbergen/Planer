@@ -76,6 +76,9 @@ const AppWrapper = () => {
   });
   const { user, loading } = useAuth();
 
+  // Create theme based on current mode
+  const theme = useMemo(() => createAppTheme(mode), [mode]);
+
   // Save theme to localStorage
   const handleSetMode = (newMode: 'light' | 'dark', manual: boolean = false) => {
     setMode(newMode);
@@ -102,7 +105,7 @@ const AppWrapper = () => {
     if (isManual) return;
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
+    
     const handleChange = (e: MediaQueryListEvent) => {
       if (!isManual) {
         const newMode = e.matches ? 'dark' : 'light';
@@ -122,50 +125,33 @@ const AppWrapper = () => {
     }
   }, [isManual]);
 
-  // Show loading state while checking auth
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: 'background.default',
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  // Show auth page if user is not authenticated
-  if (!user) {
-    return <AuthPage />;
-  }
-
-  // Show email verification page if email is not verified
-  if (!user.emailVerified) {
-    return <EmailVerification />;
-  }
-
-  // Show main app if user is authenticated and email is verified
-  return (
-    <App
-      mode={mode}
-      setMode={(newMode) => handleSetMode(newMode, true)}
-      onResetToSystem={handleResetToSystem}
-    />
-  );
-};
-
-const ThemedApp = () => {
-  const theme = useMemo(() => createAppTheme('light'), []);
-  
+  // Wrap everything in ThemeProvider with dynamic theme
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppWrapper />
+      {loading ? (
+        <Box
+          sx={{
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'background.default',
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      ) : !user ? (
+        <AuthPage />
+      ) : !user.emailVerified ? (
+        <EmailVerification />
+      ) : (
+        <App
+          mode={mode}
+          setMode={(newMode) => handleSetMode(newMode, true)}
+          onResetToSystem={handleResetToSystem}
+        />
+      )}
     </ThemeProvider>
   );
 };
@@ -173,7 +159,7 @@ const ThemedApp = () => {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <ThemedApp />
+      <AppWrapper />
     </AuthProvider>
   </StrictMode>
 );
