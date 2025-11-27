@@ -133,17 +133,6 @@ export const TaskDialog = ({ open, task, tags, defaultDate, onClose, onSave }: T
     }
   };
 
-  const formatDateTimeLocal = (dateTime: string) => {
-    if (!dateTime) return '';
-    const date = new Date(dateTime);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
-
   const formatDateOnly = (dateTime: string) => {
     if (!dateTime) return '';
     const date = new Date(dateTime);
@@ -186,9 +175,6 @@ export const TaskDialog = ({ open, task, tags, defaultDate, onClose, onSave }: T
   };
 
   const handleDateChange = (type: 'start' | 'deadline', dateValue: string) => {
-    const currentValue = type === 'start' ? startDatetime : deadlineDatetime;
-    const currentDate = currentValue ? new Date(currentValue) : new Date();
-    
     if (!dateValue) {
       if (type === 'start') {
         setStartDatetime('');
@@ -198,8 +184,27 @@ export const TaskDialog = ({ open, task, tags, defaultDate, onClose, onSave }: T
       return;
     }
 
+    // Validate date format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      return;
+    }
+
+    const currentValue = type === 'start' ? startDatetime : deadlineDatetime;
+    const currentDate = currentValue ? new Date(currentValue) : new Date();
+    
     const [year, month, day] = dateValue.split('-').map(Number);
+    
+    // Validate date values
+    if (isNaN(year) || isNaN(month) || isNaN(day) || month < 1 || month > 12 || day < 1 || day > 31) {
+      return;
+    }
+    
     currentDate.setFullYear(year, month - 1, day);
+    
+    // Check if date is valid
+    if (isNaN(currentDate.getTime())) {
+      return;
+    }
     
     if (type === 'start') {
       setStartDatetime(currentDate.toISOString());
@@ -209,13 +214,29 @@ export const TaskDialog = ({ open, task, tags, defaultDate, onClose, onSave }: T
   };
 
   const handleTimeChange = (type: 'start' | 'deadline', timeValue: string) => {
+    if (!timeValue) return;
+
+    // Validate time format
+    if (!/^\d{2}:\d{2}$/.test(timeValue)) {
+      return;
+    }
+
     const currentValue = type === 'start' ? startDatetime : deadlineDatetime;
     const date = currentValue ? new Date(currentValue) : new Date();
     
-    if (!timeValue) return;
-
     const [hours, minutes] = timeValue.split(':').map(Number);
+    
+    // Validate time values
+    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return;
+    }
+    
     date.setHours(hours, minutes, 0, 0);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return;
+    }
     
     if (type === 'start') {
       setStartDatetime(date.toISOString());

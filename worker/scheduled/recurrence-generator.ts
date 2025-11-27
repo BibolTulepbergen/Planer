@@ -1,4 +1,4 @@
-import type { Bindings, Task, TaskRecurrence } from '../types';
+import type { Task, TaskRecurrence } from '../types';
 
 /**
  * Generate recurring task instances
@@ -127,7 +127,7 @@ function calculateNextGenerationDate(
 async function createTaskInstance(
   db: D1Database,
   taskData: Task & TaskRecurrence,
-  now: Date
+  _now: Date
 ): Promise<void> {
   console.log(`Creating instance for task ${taskData.id}`);
 

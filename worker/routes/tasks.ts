@@ -12,6 +12,7 @@ import type {
   User,
   ApiResponse,
   TaskHistory,
+  TaskRecurrence,
 } from '../types';
 
 const tasks = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -108,13 +109,13 @@ tasks.get('/list', async (c) => {
         recurrence = await db
           .prepare('SELECT * FROM task_recurrence WHERE task_id = ?')
           .bind(task.id)
-          .first();
+          .first<TaskRecurrence>();
       }
 
       tasksWithTags.push({
         ...task,
         tags: tagsResult.results || [],
-        recurrence,
+        recurrence: recurrence || undefined,
       });
     }
 
@@ -176,13 +177,13 @@ tasks.get('/:id', async (c) => {
       recurrence = await db
         .prepare('SELECT * FROM task_recurrence WHERE task_id = ?')
         .bind(taskId)
-        .first();
+        .first<TaskRecurrence>();
     }
 
     const taskWithTags: TaskWithTags = {
       ...task,
       tags: tagsResult.results || [],
-      recurrence,
+      recurrence: recurrence || undefined,
     };
 
     return c.json<ApiResponse<TaskWithTags>>({
@@ -290,7 +291,7 @@ tasks.post('/', async (c) => {
           rec.end_date || null,
           rec.max_occurrences || null
         )
-        .first();
+        .first<TaskRecurrence>();
     }
 
     // Fetch task with tags
@@ -306,7 +307,7 @@ tasks.post('/', async (c) => {
     const taskWithTags: TaskWithTags = {
       ...task,
       tags: tagsResult.results || [],
-      recurrence,
+      recurrence: recurrence || undefined,
     };
 
     // Record task creation in history
@@ -893,13 +894,13 @@ tasks.post('/:id/restore', async (c) => {
       recurrence = await db
         .prepare('SELECT * FROM task_recurrence WHERE task_id = ?')
         .bind(taskId)
-        .first();
+        .first<TaskRecurrence>();
     }
 
     const taskWithTags: TaskWithTags = {
       ...restoredTask!,
       tags: tagsResult.results || [],
-      recurrence,
+      recurrence: recurrence || undefined,
     };
 
     // Record restoration in history

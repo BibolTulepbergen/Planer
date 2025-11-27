@@ -3,10 +3,8 @@ import {
   Box,
   Typography,
   Paper,
-  Grid,
   Card,
   CardContent,
-  Divider,
   LinearProgress,
   Chip,
 } from '@mui/material';
@@ -17,7 +15,6 @@ import {
   TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
 import { useTasks } from '../context/TasksContext';
-import type { TaskStatus, TaskPriority } from '../types';
 
 export const SettingsPage = () => {
   const { tasks } = useTasks();
@@ -127,18 +124,18 @@ export const SettingsPage = () => {
         Статистика
       </Typography>
 
-      <Grid container spacing={3} sx={{ mt: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3, mt: 2 }}>
         {/* Main Stats */}
-        <Grid item xs={12} sm={6} md={3}>
+        <Box>
           <StatCard
             title="Всего задач"
             value={stats.total}
             icon={<TrendingUpIcon fontSize="large" />}
             color="primary.main"
           />
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Box>
           <StatCard
             title="Выполнено"
             value={stats.completed}
@@ -146,28 +143,30 @@ export const SettingsPage = () => {
             color="success.main"
             subtitle={`${stats.completionRate.toFixed(1)}% от всех задач`}
           />
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Box>
           <StatCard
             title="В процессе"
             value={stats.inProgress}
             icon={<ScheduleIcon fontSize="large" />}
             color="info.main"
           />
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Box>
           <StatCard
             title="Отменено"
             value={stats.canceled + stats.skipped}
             icon={<CancelIcon fontSize="large" />}
             color="error.main"
           />
-        </Grid>
+        </Box>
+      </Box>
 
+      <Box sx={{ mt: 3 }}>
         {/* Completion Rate */}
-        <Grid item xs={12}>
+        <Box>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Процент выполнения
@@ -186,10 +185,12 @@ export const SettingsPage = () => {
               {stats.completed} из {stats.total} задач выполнены
             </Typography>
           </Paper>
-        </Grid>
+        </Box>
 
-        {/* Priority Breakdown */}
-        <Grid item xs={12} md={6}>
+        {/* Priority and Status Breakdown */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 3, mt: 3 }}>
+          {/* Priority Breakdown */}
+          <Box>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Задачи по приоритету
@@ -209,10 +210,10 @@ export const SettingsPage = () => {
               </Box>
             </Box>
           </Paper>
-        </Grid>
+          </Box>
 
-        {/* Status Breakdown */}
-        <Grid item xs={12} md={6}>
+          {/* Status Breakdown */}
+          <Box>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Задачи по статусу
@@ -236,16 +237,17 @@ export const SettingsPage = () => {
               </Box>
             </Box>
           </Paper>
-        </Grid>
+          </Box>
+        </Box>
 
         {/* Deadlines & Other */}
-        <Grid item xs={12}>
+        <Box sx={{ mt: 3 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Дополнительная информация
             </Typography>
-            <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mt: 1 }}>
+              <Box>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="h4" color="error.main">
                     {stats.overdue}
@@ -254,8 +256,8 @@ export const SettingsPage = () => {
                     Просроченных задач
                   </Typography>
                 </Box>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              </Box>
+              <Box>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="h4" color="warning.main">
                     {stats.upcomingDeadlines}
@@ -264,8 +266,8 @@ export const SettingsPage = () => {
                     Дедлайн в ближайшие 3 дня
                   </Typography>
                 </Box>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              </Box>
+              <Box>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="h4" color="primary.main">
                     {stats.recurring}
@@ -274,8 +276,8 @@ export const SettingsPage = () => {
                     Повторяющихся задач
                   </Typography>
                 </Box>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+              </Box>
+              <Box>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant="h4" color="success.main">
                     {stats.thisWeekCompleted}
@@ -284,11 +286,11 @@ export const SettingsPage = () => {
                     Выполнено на этой неделе
                   </Typography>
                 </Box>
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </Paper>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Box>
   );
 };

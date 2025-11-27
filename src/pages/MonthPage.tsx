@@ -7,7 +7,6 @@ import {
   Alert,
   Paper,
   IconButton,
-  Grid,
   Fab,
   Dialog,
   DialogTitle,
@@ -264,9 +263,9 @@ export const MonthPage = () => {
       ) : (
         <Paper sx={{ p: 2 }}>
           {/* Week day headers */}
-          <Grid container spacing={1} sx={{ mb: 1 }}>
+          <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
             {weekDayNames.map((day) => (
-              <Grid item xs={12 / 7} key={day}>
+              <Box key={day} sx={{ flex: 1 }}>
                 <Typography
                   variant="caption"
                   sx={{
@@ -278,12 +277,12 @@ export const MonthPage = () => {
                 >
                   {day}
                 </Typography>
-              </Grid>
+              </Box>
             ))}
-          </Grid>
+          </Box>
 
           {/* Calendar grid */}
-          <Grid container spacing={1}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1 }}>
             {calendarDays.map((day, index) => {
               const dayTasks = getTasksForDay(day);
               const activeTasks = dayTasks.filter(
@@ -292,7 +291,7 @@ export const MonthPage = () => {
               const completedTasks = dayTasks.filter((task) => task.status === 'done');
 
               return (
-                <Grid item xs={12 / 7} key={index}>
+                <Box key={index}>
                   <Paper
                     sx={{
                       p: 1,
@@ -359,10 +358,10 @@ export const MonthPage = () => {
                       )}
                     </Box>
                   </Paper>
-                </Grid>
+                </Box>
               );
             })}
-          </Grid>
+          </Box>
         </Paper>
       )}
 

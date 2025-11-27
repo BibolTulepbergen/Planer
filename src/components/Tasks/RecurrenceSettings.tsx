@@ -13,7 +13,6 @@ import {
   Divider,
   RadioGroup,
   Radio,
-  Grid,
 } from '@mui/material';
 import type { CreateRecurrenceRequest, RecurrenceType, RecurrenceEndType } from '../../types';
 

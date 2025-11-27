@@ -54,7 +54,7 @@ export default app;
 export const scheduled: ExportedHandlerScheduledHandler<Bindings> = async (
   event,
   env,
-  ctx
+  _ctx
 ) => {
   console.log('Scheduled event triggered:', event.cron);
   
