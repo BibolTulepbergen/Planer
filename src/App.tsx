@@ -1,66 +1,99 @@
-import { useState } from 'react'
+import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
-  Typography,
   Drawer,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Badge,
   AppBar,
   Toolbar,
   IconButton,
   Divider,
-  useTheme,
-} from '@mui/material'
+  Typography,
+  Container,
+} from '@mui/material';
 import {
   Menu as MenuIcon,
-  Home as HomeIcon,
+  Today as TodayIcon,
+  CalendarMonth as CalendarMonthIcon,
+  DateRange as DateRangeIcon,
+  Event as EventIcon,
+  Share as ShareIcon,
+  Label as LabelIcon,
   Settings as SettingsIcon,
-  Person as PersonIcon,
-  Notifications as NotificationsIcon,
   Close as CloseIcon,
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
-} from '@mui/icons-material'
-import './App.css'
+  Logout as LogoutIcon,
+} from '@mui/icons-material';
+import { TasksProvider } from './context/TasksContext';
+import { useAuth } from './context/AuthContext';
+import { TodayPage } from './pages/TodayPage';
+import { WeekPage } from './pages/WeekPage';
+import { MonthPage } from './pages/MonthPage';
+import { CalendarPage } from './pages/CalendarPage';
+import { SharedPage } from './pages/SharedPage';
+import { TagsPage } from './pages/TagsPage';
+import { SettingsPage } from './pages/SettingsPage';
+import './App.css';
+
 interface AppProps {
-  mode: 'light' | 'dark'
-  setMode: (mode: 'light' | 'dark') => void
-  onResetToSystem?: () => void
+  mode: 'light' | 'dark';
+  setMode: (mode: 'light' | 'dark') => void;
+  onResetToSystem?: () => void;
 }
 
-function App({ mode, setMode, onResetToSystem }: AppProps) {
-  const theme = useTheme()
-  const [drawerOpen, setDrawerOpen] = useState(false)
+const AppContent = ({ mode, setMode, onResetToSystem }: AppProps) => {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { logout } = useAuth();
 
   const toggleTheme = () => {
-    setMode(mode === 'light' ? 'dark' : 'light')
-  }
+    setMode(mode === 'light' ? 'dark' : 'light');
+  };
 
   const toggleDrawer = (open: boolean) => () => {
-    setDrawerOpen(open)
-  }
+    setDrawerOpen(open);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   const menuItems = [
-    { text: 'Главная', icon: <HomeIcon /> },
-    { text: 'Профиль', icon: <PersonIcon /> },
-    { text: 'Настройки', icon: <SettingsIcon /> },
-  ]
+    { text: 'Сегодня', icon: <TodayIcon />, path: '/app/today' },
+    { text: 'Неделя', icon: <DateRangeIcon />, path: '/app/week' },
+    { text: 'Месяц', icon: <CalendarMonthIcon />, path: '/app/month' },
+    { text: 'Календарь', icon: <EventIcon />, path: '/app/calendar' },
+    { text: 'Расшаренные', icon: <ShareIcon />, path: '/app/shared' },
+    { text: 'Теги', icon: <LabelIcon />, path: '/app/tags' },
+    { text: 'Настройки', icon: <SettingsIcon />, path: '/app/settings' },
+  ];
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    setDrawerOpen(false);
+  };
 
   const handleResetToSystem = () => {
     if (onResetToSystem) {
-      onResetToSystem()
+      onResetToSystem();
     }
-    setDrawerOpen(false)
-  }
+    setDrawerOpen(false);
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      {/* Navigation - AppBar */}
-      <AppBar position="sticky" sx={{ mb: 2 }}>
+      {/* AppBar */}
+      <AppBar position="sticky">
         <Toolbar>
           <IconButton
             edge="start"
@@ -72,27 +105,22 @@ function App({ mode, setMode, onResetToSystem }: AppProps) {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            MUI Демонстрация
+            Planer
           </Typography>
           <IconButton color="inherit" aria-label="toggle theme" onClick={toggleTheme}>
             {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
           </IconButton>
-          <IconButton color="inherit" aria-label="notifications">
-            <Badge badgeContent={4} color="error">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
         </Toolbar>
       </AppBar>
 
-      {/* Drawer navigation */}
+      {/* Drawer */}
       <Drawer
         anchor="left"
         open={drawerOpen}
         onClose={toggleDrawer(false)}
         sx={{
           '& .MuiDrawer-paper': {
-            width: { xs: '280px', sm: '320px', md: '360px' },
+            width: { xs: '280px', sm: '320px' },
           },
         }}
       >
@@ -114,7 +142,10 @@ function App({ mode, setMode, onResetToSystem }: AppProps) {
         <List>
           {menuItems.map((item) => (
             <ListItem key={item.text} disablePadding>
-              <ListItemButton>
+              <ListItemButton
+                selected={location.pathname === item.path}
+                onClick={() => handleNavigate(item.path)}
+              >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
               </ListItemButton>
@@ -126,19 +157,48 @@ function App({ mode, setMode, onResetToSystem }: AppProps) {
               <ListItemIcon>
                 {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
               </ListItemIcon>
-              <ListItemText 
-                primary="Следовать системной теме" 
+              <ListItemText
+                primary="Системная тема"
                 secondary="Автоматическое переключение"
               />
+            </ListItemButton>
+          </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon />
+              </ListItemIcon>
+              <ListItemText primary="Выйти" />
             </ListItemButton>
           </ListItem>
         </List>
       </Drawer>
 
-      {/* Empty main content area to keep layout structure */}
-      <Box sx={{ flex: 1 }} />
+      {/* Main content */}
+      <Container maxWidth="lg" sx={{ flex: 1, py: 3 }}>
+        <Routes>
+          <Route path="/app/today" element={<TodayPage />} />
+          <Route path="/app/week" element={<WeekPage />} />
+          <Route path="/app/month" element={<MonthPage />} />
+          <Route path="/app/calendar" element={<CalendarPage />} />
+          <Route path="/app/shared" element={<SharedPage />} />
+          <Route path="/app/tags" element={<TagsPage />} />
+          <Route path="/app/settings" element={<SettingsPage />} />
+          <Route path="*" element={<Navigate to="/app/today" replace />} />
+        </Routes>
+      </Container>
     </Box>
-  )
+  );
+};
+
+function App(props: AppProps) {
+  return (
+    <BrowserRouter>
+      <TasksProvider>
+        <AppContent {...props} />
+      </TasksProvider>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

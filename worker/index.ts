@@ -3,6 +3,8 @@ import { cors } from 'hono/cors';
 import { logger } from './middleware/logger';
 import { errorHandler } from './middleware/errorHandler';
 import versions from './routes/versions';
+import tasks from './routes/tasks';
+import tags from './routes/tags';
 import type { Bindings } from './types';
 
 // Initialize Hono app with Bindings for environment
@@ -12,8 +14,8 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.use('*', logger());
 app.use('*', cors({
   origin: '*',
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'], // Added Authorization header
+  allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // Public test endpoint (no auth required)
@@ -25,8 +27,10 @@ app.get('/api/test', (c) => {
   });
 });
 
-// Mount version routes
+// Mount routes
 app.route('/api', versions);
+app.route('/api/tasks', tasks);
+app.route('/api/tags', tags);
 
 // 404 handler for undefined routes
 app.notFound((c) => {

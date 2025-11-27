@@ -1,59 +1,5 @@
-// Type definitions for application
-import type { VerifyFirebaseAuthEnv } from '@hono/firebase-auth';
+// Frontend type definitions
 
-export interface AppVersion {
-  id: number;
-  version: string;
-  release_date: string;
-  description: string | null;
-  is_active: number;
-  created_at: string;
-  updated_at: string;
-}
-
-// Extend VerifyFirebaseAuthEnv to include our custom bindings
-export type Bindings = VerifyFirebaseAuthEnv & {
-  DataBase: D1Database;
-};
-
-// Context variables
-export type Variables = {
-  user: User;
-};
-
-export interface CreateVersionRequest {
-  version: string;
-  description?: string;
-  is_active?: boolean;
-}
-
-export interface UpdateVersionRequest {
-  version?: string;
-  description?: string;
-  is_active?: boolean;
-}
-
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-  count?: number;
-}
-
-// User types
-export interface User {
-  id: number;
-  firebase_uid: string;
-  email: string | null;
-  display_name: string | null;
-  photo_url: string | null;
-  timezone: string;
-  created_at: string;
-  updated_at: string;
-}
-
-// Task types
 export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
 export type TaskStatus = 'planned' | 'in_progress' | 'done' | 'skipped' | 'canceled';
 
@@ -97,7 +43,6 @@ export interface UpdateTaskRequest {
   tag_ids?: number[];
 }
 
-// Tag types
 export interface Tag {
   id: number;
   user_id: number;
@@ -114,5 +59,25 @@ export interface CreateTagRequest {
 export interface UpdateTagRequest {
   name?: string;
   color?: string;
+}
+
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: string;
+  count?: number;
+}
+
+export type ViewMode = 'day' | 'week' | 'month' | 'calendar';
+
+export interface TaskFilters {
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  tagId?: number;
+  search?: string;
+  from?: string;
+  to?: string;
+  includeArchived?: boolean;
 }
 
