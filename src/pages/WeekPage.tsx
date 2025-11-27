@@ -27,7 +27,7 @@ import { TaskDialog } from '../components/Tasks/TaskDialog';
 import type { TaskWithTags, TaskStatus, CreateTaskRequest, UpdateTaskRequest } from '../types';
 
 export const WeekPage = () => {
-  const { tasks, loading, error, tags, createTask, updateTask, deleteTask, duplicateTask } = useTasks();
+  const { tasks, loading, error, tags, createTask, updateTask, deleteTask, archiveTask, duplicateTask } = useTasks();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskWithTags | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -113,6 +113,14 @@ export const WeekPage = () => {
       await duplicateTask(task.id);
     } catch (error) {
       console.error('Error duplicating task:', error);
+    }
+  };
+
+  const handleArchiveTask = async (task: TaskWithTags) => {
+    try {
+      await archiveTask(task.id);
+    } catch (error) {
+      console.error('Error archiving task:', error);
     }
   };
 
@@ -298,6 +306,7 @@ export const WeekPage = () => {
                         task={task}
                         onEdit={handleEditTask}
                         onDelete={handleDeleteTask}
+                        onArchive={handleArchiveTask}
                         onDuplicate={handleDuplicateTask}
                         onStatusChange={handleStatusChange}
                       />
@@ -308,6 +317,7 @@ export const WeekPage = () => {
                         task={task}
                         onEdit={handleEditTask}
                         onDelete={handleDeleteTask}
+                        onArchive={handleArchiveTask}
                         onDuplicate={handleDuplicateTask}
                         onStatusChange={handleStatusChange}
                       />

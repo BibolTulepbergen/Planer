@@ -28,7 +28,7 @@ import { TaskDialog } from '../components/Tasks/TaskDialog';
 import type { TaskWithTags, TaskStatus, CreateTaskRequest, UpdateTaskRequest } from '../types';
 
 export const MonthPage = () => {
-  const { tasks, loading, error, tags, createTask, updateTask, deleteTask, duplicateTask } = useTasks();
+  const { tasks, loading, error, tags, createTask, updateTask, deleteTask, archiveTask, duplicateTask } = useTasks();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskWithTags | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -154,6 +154,18 @@ export const MonthPage = () => {
       }
     } catch (error) {
       console.error('Error duplicating task:', error);
+    }
+  };
+
+  const handleArchiveTask = async (task: TaskWithTags) => {
+    try {
+      await archiveTask(task.id);
+      // Update day dialog if open
+      if (selectedDay) {
+        setSelectedDayTasks(getTasksForDay(selectedDay));
+      }
+    } catch (error) {
+      console.error('Error archiving task:', error);
     }
   };
 
@@ -427,6 +439,7 @@ export const MonthPage = () => {
                   task={task}
                   onEdit={handleEditTask}
                   onDelete={handleDeleteTask}
+                  onArchive={handleArchiveTask}
                   onDuplicate={handleDuplicateTask}
                   onStatusChange={handleStatusChange}
                 />

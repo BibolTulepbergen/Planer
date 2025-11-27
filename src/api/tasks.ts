@@ -83,6 +83,13 @@ export const duplicateTask = async (id: number): Promise<TaskWithTags> => {
 };
 
 /**
+ * Archive task
+ */
+export const archiveTask = async (id: number): Promise<void> => {
+  await api.delete<ApiResponse>(`/tasks/${id}?soft=true`);
+};
+
+/**
  * Restore archived task
  */
 export const restoreTask = async (id: number): Promise<TaskWithTags> => {

@@ -53,8 +53,7 @@ export default app;
 // Export scheduled handler for cron jobs
 export const scheduled: ExportedHandlerScheduledHandler<Bindings> = async (
   event,
-  env,
-  _ctx
+  env
 ) => {
   console.log('Scheduled event triggered:', event.cron);
   

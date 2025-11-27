@@ -33,6 +33,7 @@ interface TasksContextType {
   createTask: (data: CreateTaskRequest) => Promise<TaskWithTags>;
   updateTask: (id: number, data: UpdateTaskRequest) => Promise<TaskWithTags>;
   deleteTask: (id: number, soft?: boolean) => Promise<void>;
+  archiveTask: (id: number) => Promise<void>;
   duplicateTask: (id: number) => Promise<TaskWithTags>;
   restoreTask: (id: number) => Promise<TaskWithTags>;
 
@@ -143,6 +144,19 @@ export const TasksProvider = ({ children }: TasksProviderProps) => {
     }
   }, [loadTasks]);
 
+  // Archive task
+  const archiveTask = useCallback(async (id: number): Promise<void> => {
+    try {
+      await tasksApi.archiveTask(id);
+      // Reload tasks to update the list
+      await loadTasks();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to archive task';
+      setError(message);
+      throw err;
+    }
+  }, [loadTasks]);
+
   // Duplicate task
   const duplicateTask = useCallback(
     async (id: number): Promise<TaskWithTags> => {
@@ -247,6 +261,7 @@ export const TasksProvider = ({ children }: TasksProviderProps) => {
     createTask,
     updateTask,
     deleteTask,
+    archiveTask,
     duplicateTask,
     restoreTask,
     loadTags,

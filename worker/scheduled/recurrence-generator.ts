@@ -35,7 +35,7 @@ export async function generateRecurringTasks(db: D1Database): Promise<void> {
         const shouldGenerate = await shouldGenerateInstance(taskData, now);
 
         if (shouldGenerate) {
-          await createTaskInstance(db, taskData, now);
+          await createTaskInstance(db, taskData);
         }
       } catch (error) {
         console.error(`Error processing task ${taskData.id}:`, error);
@@ -126,8 +126,7 @@ function calculateNextGenerationDate(
  */
 async function createTaskInstance(
   db: D1Database,
-  taskData: Task & TaskRecurrence,
-  _now: Date
+  taskData: Task & TaskRecurrence
 ): Promise<void> {
   console.log(`Creating instance for task ${taskData.id}`);
 

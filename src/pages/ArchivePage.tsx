@@ -20,6 +20,7 @@ import {
 import { useTasks } from '../context/TasksContext';
 import { TaskCard } from '../components/Tasks/TaskCard';
 import type { TaskWithTags, TaskStatus } from '../types';
+import * as tasksApi from '../api/tasks';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -44,21 +45,34 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export const ArchivePage = () => {
-  const { tasks, loading, error, filters, setFilters, updateTask, deleteTask, restoreTask } = useTasks();
+  const { updateTask, deleteTask, restoreTask } = useTasks();
   const [tabValue, setTabValue] = useState(0);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [hardDeleteDialogOpen, setHardDeleteDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskWithTags | null>(null);
+  const [archivedTasks, setArchivedTasks] = useState<TaskWithTags[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Load archived tasks
   useEffect(() => {
-    setFilters({ ...filters, includeArchived: true });
-    return () => {
-      setFilters({ ...filters, includeArchived: false });
+    const loadArchivedTasks = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const tasks = await tasksApi.getTasks({ includeArchived: true });
+        setArchivedTasks(tasks.filter((task) => task.is_archived === 1));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to load archived tasks';
+        setError(message);
+        console.error('Error loading archived tasks:', err);
+      } finally {
+        setLoading(false);
+      }
     };
-  }, []);
 
-  const archivedTasks = tasks.filter((task) => task.is_archived === 1);
+    loadArchivedTasks();
+  }, []);
 
   const handleRestore = (task: TaskWithTags) => {
     setSelectedTask(task);
@@ -69,10 +83,20 @@ export const ArchivePage = () => {
     if (selectedTask) {
       try {
         await restoreTask(selectedTask.id);
+        // Remove from archived tasks list
+        setArchivedTasks((prev) => prev.filter((task) => task.id !== selectedTask.id));
         setRestoreDialogOpen(false);
         setSelectedTask(null);
       } catch (error) {
         console.error('Error restoring task:', error);
+        
+        // If task not found, it's already deleted - remove from UI anyway
+        const errorMessage = error instanceof Error ? error.message : '';
+        if (errorMessage.includes('Task not found')) {
+          setArchivedTasks((prev) => prev.filter((task) => task.id !== selectedTask.id));
+          setRestoreDialogOpen(false);
+          setSelectedTask(null);
+        }
       }
     }
   };
@@ -86,17 +110,29 @@ export const ArchivePage = () => {
     if (selectedTask) {
       try {
         await deleteTask(selectedTask.id, false); // Hard delete
+        // Remove from archived tasks list
+        setArchivedTasks((prev) => prev.filter((task) => task.id !== selectedTask.id));
         setHardDeleteDialogOpen(false);
         setSelectedTask(null);
       } catch (error) {
         console.error('Error deleting task:', error);
+        
+        // If task not found, it's already deleted - remove from UI anyway
+        const errorMessage = error instanceof Error ? error.message : '';
+        if (errorMessage.includes('Task not found')) {
+          setArchivedTasks((prev) => prev.filter((task) => task.id !== selectedTask.id));
+          setHardDeleteDialogOpen(false);
+          setSelectedTask(null);
+        }
       }
     }
   };
 
   const handleStatusChange = async (task: TaskWithTags, status: TaskStatus) => {
     try {
-      await updateTask(task.id, { status });
+      const updatedTask = await updateTask(task.id, { status });
+      // Update task in local list
+      setArchivedTasks((prev) => prev.map((t) => (t.id === task.id ? updatedTask : t)));
     } catch (error) {
       console.error('Error updating task status:', error);
     }
@@ -145,20 +181,17 @@ export const ArchivePage = () => {
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {archivedTasks.map((task) => (
-                  <Box key={task.id} sx={{ position: 'relative' }}>
+                  <Box key={task.id}>
                     <TaskCard
                       task={task}
                       onStatusChange={handleStatusChange}
-                      onDelete={() => {}}
-                      onDuplicate={() => {}}
                     />
                     <Box
                       sx={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
                         display: 'flex',
                         gap: 1,
+                        justifyContent: 'flex-end',
+                        mt: 1,
                       }}
                     >
                       <Button
@@ -188,20 +221,17 @@ export const ArchivePage = () => {
           <TabPanel value={tabValue} index={1}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {getTasksByStatus('done').map((task) => (
-                <Box key={task.id} sx={{ position: 'relative' }}>
+                <Box key={task.id}>
                   <TaskCard
                     task={task}
                     onStatusChange={handleStatusChange}
-                    onDelete={() => {}}
-                    onDuplicate={() => {}}
                   />
                   <Box
                     sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
                       display: 'flex',
                       gap: 1,
+                      justifyContent: 'flex-end',
+                      mt: 1,
                     }}
                   >
                     <Button
@@ -230,20 +260,17 @@ export const ArchivePage = () => {
           <TabPanel value={tabValue} index={2}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {getTasksByStatus('canceled').map((task) => (
-                <Box key={task.id} sx={{ position: 'relative' }}>
+                <Box key={task.id}>
                   <TaskCard
                     task={task}
                     onStatusChange={handleStatusChange}
-                    onDelete={() => {}}
-                    onDuplicate={() => {}}
                   />
                   <Box
                     sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
                       display: 'flex',
                       gap: 1,
+                      justifyContent: 'flex-end',
+                      mt: 1,
                     }}
                   >
                     <Button
@@ -272,20 +299,17 @@ export const ArchivePage = () => {
           <TabPanel value={tabValue} index={3}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {getTasksByStatus('skipped').map((task) => (
-                <Box key={task.id} sx={{ position: 'relative' }}>
+                <Box key={task.id}>
                   <TaskCard
                     task={task}
                     onStatusChange={handleStatusChange}
-                    onDelete={() => {}}
-                    onDuplicate={() => {}}
                   />
                   <Box
                     sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
                       display: 'flex',
                       gap: 1,
+                      justifyContent: 'flex-end',
+                      mt: 1,
                     }}
                   >
                     <Button

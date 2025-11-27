@@ -104,18 +104,21 @@ tasks.get('/list', async (c) => {
         .all<Tag>();
 
       // Get recurrence if task is recurring
-      let recurrence = undefined;
+      let recurrence: TaskRecurrence | undefined = undefined;
       if (task.is_recurring) {
-        recurrence = await db
+        const recurrenceData = await db
           .prepare('SELECT * FROM task_recurrence WHERE task_id = ?')
           .bind(task.id)
           .first<TaskRecurrence>();
+        if (recurrenceData) {
+          recurrence = recurrenceData;
+        }
       }
 
       tasksWithTags.push({
         ...task,
         tags: tagsResult.results || [],
-        recurrence: recurrence || undefined,
+        recurrence,
       });
     }
 
@@ -172,18 +175,21 @@ tasks.get('/:id', async (c) => {
       .all<Tag>();
 
     // Get recurrence if task is recurring
-    let recurrence = undefined;
+    let recurrence: TaskRecurrence | undefined = undefined;
     if (task.is_recurring) {
-      recurrence = await db
+      const recurrenceData = await db
         .prepare('SELECT * FROM task_recurrence WHERE task_id = ?')
         .bind(taskId)
         .first<TaskRecurrence>();
+      if (recurrenceData) {
+        recurrence = recurrenceData;
+      }
     }
 
     const taskWithTags: TaskWithTags = {
       ...task,
       tags: tagsResult.results || [],
-      recurrence: recurrence || undefined,
+      recurrence,
     };
 
     return c.json<ApiResponse<TaskWithTags>>({
@@ -264,12 +270,12 @@ tasks.post('/', async (c) => {
     }
 
     // Add recurrence if provided
-    let recurrence = undefined;
+    let recurrence: TaskRecurrence | undefined = undefined;
     if (body.recurrence) {
       const rec = body.recurrence;
       const daysOfWeekStr = rec.days_of_week ? rec.days_of_week.join(',') : null;
       
-      recurrence = await db
+      const recurrenceData = await db
         .prepare(
           `INSERT INTO task_recurrence (
             task_id, recurrence_type, interval_value, days_of_week, 
@@ -292,6 +298,9 @@ tasks.post('/', async (c) => {
           rec.max_occurrences || null
         )
         .first<TaskRecurrence>();
+      if (recurrenceData) {
+        recurrence = recurrenceData;
+      }
     }
 
     // Fetch task with tags
@@ -307,7 +316,7 @@ tasks.post('/', async (c) => {
     const taskWithTags: TaskWithTags = {
       ...task,
       tags: tagsResult.results || [],
-      recurrence: recurrence || undefined,
+      recurrence,
     };
 
     // Record task creation in history
@@ -488,7 +497,7 @@ tasks.delete('/:id', async (c) => {
   try {
     // Check if task exists and belongs to user
     const task = await db
-      .prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ?')
+      .prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ? AND deleted_at IS NULL')
       .bind(taskId, user.id)
       .first<Task>();
 
@@ -503,11 +512,11 @@ tasks.delete('/:id', async (c) => {
     }
 
     if (soft) {
-      // Soft delete
+      // Soft delete (archive)
       await db
         .prepare(
           `UPDATE tasks 
-           SET is_archived = 1, deleted_at = datetime('now'), updated_at = datetime('now')
+           SET is_archived = 1, updated_at = datetime('now')
            WHERE id = ?`
         )
         .bind(taskId)
@@ -528,9 +537,7 @@ tasks.delete('/:id', async (c) => {
       });
     } else {
       // Hard delete
-      await db.prepare('DELETE FROM tasks WHERE id = ?').bind(taskId).run();
-
-      // Record deletion in history
+      // Record deletion in history BEFORE deleting the task
       await db
         .prepare(
           `INSERT INTO task_history (task_id, user_id, action, changed_at)
@@ -538,6 +545,9 @@ tasks.delete('/:id', async (c) => {
         )
         .bind(taskId, user.id)
         .run();
+
+      // Now delete the task (this will cascade delete the history record we just created)
+      await db.prepare('DELETE FROM tasks WHERE id = ?').bind(taskId).run();
 
       return c.json<ApiResponse>({
         success: true,
@@ -889,18 +899,21 @@ tasks.post('/:id/restore', async (c) => {
       .all<Tag>();
 
     // Get recurrence if task is recurring
-    let recurrence = undefined;
+    let recurrence: TaskRecurrence | undefined = undefined;
     if (restoredTask!.is_recurring) {
-      recurrence = await db
+      const recurrenceData = await db
         .prepare('SELECT * FROM task_recurrence WHERE task_id = ?')
         .bind(taskId)
         .first<TaskRecurrence>();
+      if (recurrenceData) {
+        recurrence = recurrenceData;
+      }
     }
 
     const taskWithTags: TaskWithTags = {
       ...restoredTask!,
       tags: tagsResult.results || [],
-      recurrence: recurrence || undefined,
+      recurrence,
     };
 
     // Record restoration in history
