@@ -33,6 +33,8 @@ interface TasksContextType {
   createTask: (data: CreateTaskRequest) => Promise<TaskWithTags>;
   updateTask: (id: number, data: UpdateTaskRequest) => Promise<TaskWithTags>;
   deleteTask: (id: number, soft?: boolean) => Promise<void>;
+  duplicateTask: (id: number) => Promise<TaskWithTags>;
+  restoreTask: (id: number) => Promise<TaskWithTags>;
 
   // Tags actions
   loadTags: () => Promise<void>;
@@ -141,6 +143,38 @@ export const TasksProvider = ({ children }: TasksProviderProps) => {
     }
   }, [loadTasks]);
 
+  // Duplicate task
+  const duplicateTask = useCallback(
+    async (id: number): Promise<TaskWithTags> => {
+      try {
+        const duplicatedTask = await tasksApi.duplicateTask(id);
+        setTasks((prev) => [duplicatedTask, ...prev]);
+        return duplicatedTask;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to duplicate task';
+        setError(message);
+        throw err;
+      }
+    },
+    []
+  );
+
+  // Restore task
+  const restoreTask = useCallback(
+    async (id: number): Promise<TaskWithTags> => {
+      try {
+        const restoredTask = await tasksApi.restoreTask(id);
+        setTasks((prev) => prev.map((task) => (task.id === id ? restoredTask : task)));
+        return restoredTask;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to restore task';
+        setError(message);
+        throw err;
+      }
+    },
+    []
+  );
+
   // Load tags
   const loadTags = useCallback(async () => {
     setTagsLoading(true);
@@ -213,6 +247,8 @@ export const TasksProvider = ({ children }: TasksProviderProps) => {
     createTask,
     updateTask,
     deleteTask,
+    duplicateTask,
+    restoreTask,
     loadTags,
     createTag,
     updateTag,

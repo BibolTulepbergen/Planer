@@ -11,6 +11,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Flag as FlagIcon,
+  ContentCopy as ContentCopyIcon,
 } from '@mui/icons-material';
 import type { TaskWithTags, TaskStatus } from '../../types';
 
@@ -18,6 +19,7 @@ interface TaskCardProps {
   task: TaskWithTags;
   onEdit?: (task: TaskWithTags) => void;
   onDelete?: (task: TaskWithTags) => void;
+  onDuplicate?: (task: TaskWithTags) => void;
   onStatusChange?: (task: TaskWithTags, status: TaskStatus) => void;
 }
 
@@ -43,7 +45,7 @@ const statusLabels = {
   canceled: 'Отменено',
 };
 
-export const TaskCard = ({ task, onEdit, onDelete, onStatusChange }: TaskCardProps) => {
+export const TaskCard = ({ task, onEdit, onDelete, onDuplicate, onStatusChange }: TaskCardProps) => {
   const handleStatusToggle = () => {
     if (onStatusChange) {
       const newStatus: TaskStatus = task.status === 'done' ? 'planned' : 'done';
@@ -145,6 +147,11 @@ export const TaskCard = ({ task, onEdit, onDelete, onStatusChange }: TaskCardPro
             {onEdit && (
               <IconButton size="small" onClick={() => onEdit(task)}>
                 <EditIcon fontSize="small" />
+              </IconButton>
+            )}
+            {onDuplicate && (
+              <IconButton size="small" onClick={() => onDuplicate(task)} title="Дублировать">
+                <ContentCopyIcon fontSize="small" />
               </IconButton>
             )}
             {onDelete && (

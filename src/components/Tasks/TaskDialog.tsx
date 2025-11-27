@@ -13,7 +13,11 @@ import {
   Box,
   Chip,
   OutlinedInput,
+  Divider,
+  Typography,
+  ButtonGroup,
 } from '@mui/material';
+import { RecurrenceSettings } from './RecurrenceSettings';
 import type {
   TaskWithTags,
   CreateTaskRequest,
@@ -21,12 +25,14 @@ import type {
   TaskPriority,
   TaskStatus,
   Tag,
+  CreateRecurrenceRequest,
 } from '../../types';
 
 interface TaskDialogProps {
   open: boolean;
   task?: TaskWithTags | null;
   tags: Tag[];
+  defaultDate?: string;
   onClose: () => void;
   onSave: (data: CreateTaskRequest | UpdateTaskRequest) => Promise<void>;
 }
@@ -46,7 +52,7 @@ const statusOptions: { value: TaskStatus; label: string }[] = [
   { value: 'canceled', label: 'Отменено' },
 ];
 
-export const TaskDialog = ({ open, task, tags, onClose, onSave }: TaskDialogProps) => {
+export const TaskDialog = ({ open, task, tags, defaultDate, onClose, onSave }: TaskDialogProps) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDatetime, setStartDatetime] = useState('');
@@ -54,6 +60,7 @@ export const TaskDialog = ({ open, task, tags, onClose, onSave }: TaskDialogProp
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [status, setStatus] = useState<TaskStatus>('planned');
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [recurrence, setRecurrence] = useState<CreateRecurrenceRequest | undefined>(undefined);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -65,17 +72,35 @@ export const TaskDialog = ({ open, task, tags, onClose, onSave }: TaskDialogProp
       setPriority(task.priority);
       setStatus(task.status);
       setSelectedTagIds(task.tags.map((t) => t.id));
+      // Convert recurrence from backend format to frontend format
+      if (task.recurrence) {
+        const rec = task.recurrence;
+        setRecurrence({
+          recurrence_type: rec.recurrence_type,
+          interval_value: rec.interval_value,
+          days_of_week: rec.days_of_week ? rec.days_of_week.split(',').map(Number) : undefined,
+          day_of_month: rec.day_of_month || undefined,
+          week_of_month: rec.week_of_month || undefined,
+          month_of_year: rec.month_of_year || undefined,
+          end_type: rec.end_type,
+          end_date: rec.end_date || undefined,
+          max_occurrences: rec.max_occurrences || undefined,
+        });
+      } else {
+        setRecurrence(undefined);
+      }
     } else {
       // Reset form for new task
       setTitle('');
       setDescription('');
-      setStartDatetime('');
+      setStartDatetime(defaultDate || '');
       setDeadlineDatetime('');
       setPriority('medium');
       setStatus('planned');
       setSelectedTagIds([]);
+      setRecurrence(undefined);
     }
-  }, [task, open]);
+  }, [task, open, defaultDate]);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -93,6 +118,11 @@ export const TaskDialog = ({ open, task, tags, onClose, onSave }: TaskDialogProp
         status,
         tag_ids: selectedTagIds.length > 0 ? selectedTagIds : undefined,
       };
+
+      // Only add recurrence for new tasks (not updates)
+      if (!task && recurrence) {
+        (data as CreateTaskRequest).recurrence = recurrence;
+      }
 
       await onSave(data);
       onClose();
@@ -112,6 +142,86 @@ export const TaskDialog = ({ open, task, tags, onClose, onSave }: TaskDialogProp
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const formatDateOnly = (dateTime: string) => {
+    if (!dateTime) return '';
+    const date = new Date(dateTime);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatTimeOnly = (dateTime: string) => {
+    if (!dateTime) return '';
+    const date = new Date(dateTime);
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const setDateQuickly = (type: 'start' | 'deadline', days: number) => {
+    const now = new Date();
+    now.setDate(now.getDate() + days);
+    if (type === 'start') {
+      now.setHours(9, 0, 0, 0);
+      setStartDatetime(now.toISOString());
+    } else {
+      now.setHours(18, 0, 0, 0);
+      setDeadlineDatetime(now.toISOString());
+    }
+  };
+
+  const setTimeQuickly = (type: 'start' | 'deadline', hour: number, minute: number = 0) => {
+    const currentValue = type === 'start' ? startDatetime : deadlineDatetime;
+    const date = currentValue ? new Date(currentValue) : new Date();
+    date.setHours(hour, minute, 0, 0);
+    
+    if (type === 'start') {
+      setStartDatetime(date.toISOString());
+    } else {
+      setDeadlineDatetime(date.toISOString());
+    }
+  };
+
+  const handleDateChange = (type: 'start' | 'deadline', dateValue: string) => {
+    const currentValue = type === 'start' ? startDatetime : deadlineDatetime;
+    const currentDate = currentValue ? new Date(currentValue) : new Date();
+    
+    if (!dateValue) {
+      if (type === 'start') {
+        setStartDatetime('');
+      } else {
+        setDeadlineDatetime('');
+      }
+      return;
+    }
+
+    const [year, month, day] = dateValue.split('-').map(Number);
+    currentDate.setFullYear(year, month - 1, day);
+    
+    if (type === 'start') {
+      setStartDatetime(currentDate.toISOString());
+    } else {
+      setDeadlineDatetime(currentDate.toISOString());
+    }
+  };
+
+  const handleTimeChange = (type: 'start' | 'deadline', timeValue: string) => {
+    const currentValue = type === 'start' ? startDatetime : deadlineDatetime;
+    const date = currentValue ? new Date(currentValue) : new Date();
+    
+    if (!timeValue) return;
+
+    const [hours, minutes] = timeValue.split(':').map(Number);
+    date.setHours(hours, minutes, 0, 0);
+    
+    if (type === 'start') {
+      setStartDatetime(date.toISOString());
+    } else {
+      setDeadlineDatetime(date.toISOString());
+    }
   };
 
   return (
@@ -137,23 +247,97 @@ export const TaskDialog = ({ open, task, tags, onClose, onSave }: TaskDialogProp
             rows={3}
           />
 
-          <TextField
-            label="Дата и время начала"
-            type="datetime-local"
-            value={formatDateTimeLocal(startDatetime)}
-            onChange={(e) => setStartDatetime(e.target.value ? new Date(e.target.value).toISOString() : '')}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
+          {/* Start Date and Time */}
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Дата и время начала
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+              <TextField
+                label="Дата"
+                type="date"
+                value={formatDateOnly(startDatetime)}
+                onChange={(e) => handleDateChange('start', e.target.value)}
+                sx={{ flex: 1 }}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Время"
+                type="time"
+                value={formatTimeOnly(startDatetime)}
+                onChange={(e) => handleTimeChange('start', e.target.value)}
+                sx={{ flex: 1 }}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              <ButtonGroup size="small" variant="outlined">
+                <Button onClick={() => setDateQuickly('start', 0)}>Сегодня</Button>
+                <Button onClick={() => setDateQuickly('start', 1)}>Завтра</Button>
+                <Button onClick={() => setDateQuickly('start', 7)}>Через неделю</Button>
+              </ButtonGroup>
+              <ButtonGroup size="small" variant="outlined">
+                <Button onClick={() => setTimeQuickly('start', new Date().getHours(), new Date().getMinutes())}>
+                  Сейчас
+                </Button>
+                <Button onClick={() => setTimeQuickly('start', 9, 0)}>9:00</Button>
+                <Button onClick={() => setTimeQuickly('start', 12, 0)}>12:00</Button>
+                <Button onClick={() => setTimeQuickly('start', 15, 0)}>15:00</Button>
+                <Button onClick={() => setTimeQuickly('start', 18, 0)}>18:00</Button>
+              </ButtonGroup>
+              {startDatetime && (
+                <Button size="small" variant="outlined" color="error" onClick={() => setStartDatetime('')}>
+                  Очистить
+                </Button>
+              )}
+            </Box>
+          </Box>
 
-          <TextField
-            label="Дедлайн"
-            type="datetime-local"
-            value={formatDateTimeLocal(deadlineDatetime)}
-            onChange={(e) => setDeadlineDatetime(e.target.value ? new Date(e.target.value).toISOString() : '')}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
+          {/* Deadline Date and Time */}
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Дедлайн
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+              <TextField
+                label="Дата"
+                type="date"
+                value={formatDateOnly(deadlineDatetime)}
+                onChange={(e) => handleDateChange('deadline', e.target.value)}
+                sx={{ flex: 1 }}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Время"
+                type="time"
+                value={formatTimeOnly(deadlineDatetime)}
+                onChange={(e) => handleTimeChange('deadline', e.target.value)}
+                sx={{ flex: 1 }}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+              <ButtonGroup size="small" variant="outlined">
+                <Button onClick={() => setDateQuickly('deadline', 0)}>Сегодня</Button>
+                <Button onClick={() => setDateQuickly('deadline', 1)}>Завтра</Button>
+                <Button onClick={() => setDateQuickly('deadline', 7)}>Через неделю</Button>
+              </ButtonGroup>
+              <ButtonGroup size="small" variant="outlined">
+                <Button onClick={() => setTimeQuickly('deadline', new Date().getHours(), new Date().getMinutes())}>
+                  Сейчас
+                </Button>
+                <Button onClick={() => setTimeQuickly('deadline', 9, 0)}>9:00</Button>
+                <Button onClick={() => setTimeQuickly('deadline', 12, 0)}>12:00</Button>
+                <Button onClick={() => setTimeQuickly('deadline', 15, 0)}>15:00</Button>
+                <Button onClick={() => setTimeQuickly('deadline', 18, 0)}>18:00</Button>
+              </ButtonGroup>
+              {deadlineDatetime && (
+                <Button size="small" variant="outlined" color="error" onClick={() => setDeadlineDatetime('')}>
+                  Очистить
+                </Button>
+              )}
+            </Box>
+          </Box>
 
           <FormControl fullWidth>
             <InputLabel>Приоритет</InputLabel>
@@ -219,6 +403,14 @@ export const TaskDialog = ({ open, task, tags, onClose, onSave }: TaskDialogProp
               ))}
             </Select>
           </FormControl>
+
+          {/* Recurrence Settings - Only for new tasks */}
+          {!task && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <RecurrenceSettings value={recurrence} onChange={setRecurrence} />
+            </>
+          )}
         </Box>
       </DialogContent>
       <DialogActions>

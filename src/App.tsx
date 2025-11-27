@@ -24,6 +24,7 @@ import {
   Share as ShareIcon,
   Label as LabelIcon,
   Settings as SettingsIcon,
+  Archive as ArchiveIcon,
   Close as CloseIcon,
   LightMode as LightModeIcon,
   DarkMode as DarkModeIcon,
@@ -37,6 +38,7 @@ import { MonthPage } from './pages/MonthPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { SharedPage } from './pages/SharedPage';
 import { TagsPage } from './pages/TagsPage';
+import { ArchivePage } from './pages/ArchivePage';
 import { SettingsPage } from './pages/SettingsPage';
 import './App.css';
 
@@ -75,6 +77,7 @@ const AppContent = ({ mode, setMode, onResetToSystem }: AppProps) => {
     { text: 'Календарь', icon: <EventIcon />, path: '/app/calendar' },
     { text: 'Расшаренные', icon: <ShareIcon />, path: '/app/shared' },
     { text: 'Теги', icon: <LabelIcon />, path: '/app/tags' },
+    { text: 'Архив', icon: <ArchiveIcon />, path: '/app/archive' },
     { text: 'Настройки', icon: <SettingsIcon />, path: '/app/settings' },
   ];
 
@@ -183,6 +186,7 @@ const AppContent = ({ mode, setMode, onResetToSystem }: AppProps) => {
           <Route path="/app/calendar" element={<CalendarPage />} />
           <Route path="/app/shared" element={<SharedPage />} />
           <Route path="/app/tags" element={<TagsPage />} />
+          <Route path="/app/archive" element={<ArchivePage />} />
           <Route path="/app/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/app/today" replace />} />
         </Routes>

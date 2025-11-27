@@ -71,3 +71,25 @@ export const deleteTask = async (id: number, soft: boolean = true): Promise<void
   await api.delete<ApiResponse>(`/tasks/${id}?soft=${soft}`);
 };
 
+/**
+ * Duplicate task
+ */
+export const duplicateTask = async (id: number): Promise<TaskWithTags> => {
+  const response = await api.post<ApiResponse<TaskWithTags>>(`/tasks/${id}/duplicate`, {});
+  if (!response.data) {
+    throw new Error('Failed to duplicate task');
+  }
+  return response.data;
+};
+
+/**
+ * Restore archived task
+ */
+export const restoreTask = async (id: number): Promise<TaskWithTags> => {
+  const response = await api.post<ApiResponse<TaskWithTags>>(`/tasks/${id}/restore`, {});
+  if (!response.data) {
+    throw new Error('Failed to restore task');
+  }
+  return response.data;
+};
+

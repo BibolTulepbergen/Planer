@@ -5,6 +5,7 @@ import { errorHandler } from './middleware/errorHandler';
 import versions from './routes/versions';
 import tasks from './routes/tasks';
 import tags from './routes/tags';
+import { generateRecurringTasks } from './scheduled/recurrence-generator';
 import type { Bindings } from './types';
 
 // Initialize Hono app with Bindings for environment
@@ -46,4 +47,22 @@ app.notFound((c) => {
 // Global error handler
 app.onError(errorHandler);
 
+// Export the default handler for HTTP requests
 export default app;
+
+// Export scheduled handler for cron jobs
+export const scheduled: ExportedHandlerScheduledHandler<Bindings> = async (
+  event,
+  env,
+  ctx
+) => {
+  console.log('Scheduled event triggered:', event.cron);
+  
+  try {
+    // Generate recurring task instances
+    await generateRecurringTasks(env.DataBase);
+    console.log('Recurring tasks generation completed successfully');
+  } catch (error) {
+    console.error('Error in scheduled handler:', error);
+  }
+};
