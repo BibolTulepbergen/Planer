@@ -9,6 +9,7 @@ import type {
   UpdateTagRequest,
   ViewMode,
   TaskFilters,
+  ShareTaskRequest,
 } from '../types';
 import * as tasksApi from '../api/tasks';
 import * as tagsApi from '../api/tags';
@@ -36,6 +37,8 @@ interface TasksContextType {
   archiveTask: (id: number) => Promise<void>;
   duplicateTask: (id: number) => Promise<TaskWithTags>;
   restoreTask: (id: number) => Promise<TaskWithTags>;
+  shareTask: (id: number, data: ShareTaskRequest) => Promise<void>;
+  removeSharedTask: (id: number) => Promise<void>;
 
   // Tags actions
   loadTags: () => Promise<void>;
@@ -83,8 +86,49 @@ export const TasksProvider = ({ children }: TasksProviderProps) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await tasksApi.getTasks(filters);
-      setTasks(data);
+      const [ownTasks, sharedTasks] = await Promise.all([
+        tasksApi.getTasks(filters),
+        tasksApi.getSharedTasks(),
+      ]);
+
+      const filteredShared = sharedTasks.filter((task) => {
+        if (!filters.includeArchived && task.is_archived === 1) {
+          return false;
+        }
+
+        if (filters.status && task.status !== filters.status) {
+          return false;
+        }
+
+        if (filters.priority && task.priority !== filters.priority) {
+          return false;
+        }
+
+        if (filters.tagId && !task.tags.some((tag) => tag.id === filters.tagId)) {
+          return false;
+        }
+
+        if (filters.search) {
+          const search = filters.search.toLowerCase();
+          const inTitle = task.title.toLowerCase().includes(search);
+          const inDescription = (task.description || '').toLowerCase().includes(search);
+          if (!inTitle && !inDescription) {
+            return false;
+          }
+        }
+
+        if (filters.from && task.start_datetime && task.start_datetime < filters.from) {
+          return false;
+        }
+
+        if (filters.to && task.start_datetime && task.start_datetime > filters.to) {
+          return false;
+        }
+
+        return true;
+      });
+
+      setTasks([...ownTasks, ...filteredShared]);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load tasks';
       setError(message);
@@ -189,6 +233,29 @@ export const TasksProvider = ({ children }: TasksProviderProps) => {
     []
   );
 
+  // Share task
+  const shareTask = useCallback(async (id: number, data: ShareTaskRequest): Promise<void> => {
+    try {
+      await tasksApi.shareTask(id, data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to share task';
+      setError(message);
+      throw err;
+    }
+  }, []);
+
+  // Remove shared task from current user's list
+  const removeSharedTask = useCallback(async (id: number): Promise<void> => {
+    try {
+      await tasksApi.removeSharedTask(id);
+      setTasks((prev) => prev.filter((task) => !(task.is_shared && task.id === id)));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to remove shared task';
+      setError(message);
+      throw err;
+    }
+  }, []);
+
   // Load tags
   const loadTags = useCallback(async () => {
     setTagsLoading(true);
@@ -264,6 +331,8 @@ export const TasksProvider = ({ children }: TasksProviderProps) => {
     archiveTask,
     duplicateTask,
     restoreTask,
+    shareTask,
+    removeSharedTask,
     loadTags,
     createTag,
     updateTag,

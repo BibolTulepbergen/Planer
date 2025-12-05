@@ -5,6 +5,7 @@ import type {
   UpdateTaskRequest,
   ApiResponse,
   TaskFilters,
+  ShareTaskRequest,
 } from '../types';
 
 /**
@@ -98,5 +99,27 @@ export const restoreTask = async (id: number): Promise<TaskWithTags> => {
     throw new Error('Failed to restore task');
   }
   return response.data;
+};
+
+/**
+ * Share task with another user
+ */
+export const shareTask = async (id: number, data: ShareTaskRequest): Promise<void> => {
+  await api.post<ApiResponse>(`/tasks/${id}/share`, data);
+};
+
+/**
+ * Get tasks shared with current user
+ */
+export const getSharedTasks = async (): Promise<TaskWithTags[]> => {
+  const response = await api.get<ApiResponse<TaskWithTags[]>>('/tasks/shared-list');
+  return response.data || [];
+};
+
+/**
+ * Remove shared task from current user's list
+ */
+export const removeSharedTask = async (id: number): Promise<void> => {
+  await api.delete<ApiResponse>(`/tasks/shared/${id}`);
 };
 

@@ -58,6 +58,7 @@ export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
 export type TaskStatus = 'planned' | 'in_progress' | 'done' | 'skipped' | 'canceled';
 export type RecurrenceType = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
 export type RecurrenceEndType = 'never' | 'date' | 'count';
+export type TaskShareAccess = 'view' | 'edit';
 
 export interface Task {
   id: number;
@@ -110,6 +111,19 @@ export interface TaskHistory {
 export interface TaskWithTags extends Task {
   tags: Tag[];
   recurrence?: TaskRecurrence;
+  share_access?: TaskShareAccess;
+  is_shared?: boolean;
+}
+
+export interface TaskShare {
+  id: number;
+  task_id: number;
+  owner_user_id: number;
+  shared_user_id: number;
+  access_level: TaskShareAccess;
+  created_at: string;
+  updated_at: string;
+  removed_at: string | null;
 }
 
 export interface CreateTaskRequest {

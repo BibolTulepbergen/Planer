@@ -10,6 +10,7 @@ import type {
   User,
   ApiResponse,
   TaskRecurrence,
+  TaskShare,
 } from '../types';
 
 const tasksBase = new Hono<{ Bindings: Bindings; Variables: Variables }>();
@@ -143,8 +144,8 @@ tasksBase.get('/:id', async (c) => {
 
   try {
     const task = await db
-      .prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ? AND deleted_at IS NULL')
-      .bind(taskId, user.id)
+      .prepare('SELECT * FROM tasks WHERE id = ? AND deleted_at IS NULL')
+      .bind(taskId)
       .first<Task>();
 
     if (!task) {
@@ -155,6 +156,29 @@ tasksBase.get('/:id', async (c) => {
         },
         404
       );
+    }
+
+    let share: TaskShare | null = null;
+
+    // If user is not owner, check sharing permissions
+    if (task.user_id !== user.id) {
+      share = await db
+        .prepare(
+          `SELECT * FROM task_shares 
+           WHERE task_id = ? AND shared_user_id = ? AND removed_at IS NULL`
+        )
+        .bind(taskId, user.id)
+        .first<TaskShare>();
+
+      if (!share) {
+        return c.json<ApiResponse>(
+          {
+            success: false,
+            error: 'Task not found',
+          },
+          404
+        );
+      }
     }
 
     // Get tags
@@ -183,6 +207,8 @@ tasksBase.get('/:id', async (c) => {
       ...task,
       tags: tagsResult.results || [],
       recurrence,
+      share_access: share ? share.access_level : undefined,
+      is_shared: !!share,
     };
 
     return c.json<ApiResponse<TaskWithTags>>({
@@ -353,10 +379,10 @@ tasksBase.patch('/:id', async (c) => {
   try {
     const body = await c.req.json<UpdateTaskRequest>();
 
-    // Check if task exists and belongs to user
+    // Check if task exists
     const existingTask = await db
-      .prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ? AND deleted_at IS NULL')
-      .bind(taskId, user.id)
+      .prepare('SELECT * FROM tasks WHERE id = ? AND deleted_at IS NULL')
+      .bind(taskId)
       .first<Task>();
 
     if (!existingTask) {
@@ -367,6 +393,29 @@ tasksBase.patch('/:id', async (c) => {
         },
         404
       );
+    }
+
+    const isOwner = existingTask.user_id === user.id;
+
+    // If not owner, check sharing permissions (must have edit access)
+    if (!isOwner) {
+      const share = await db
+        .prepare(
+          `SELECT * FROM task_shares 
+           WHERE task_id = ? AND shared_user_id = ? AND removed_at IS NULL`
+        )
+        .bind(taskId, user.id)
+        .first<TaskShare>();
+
+      if (!share || share.access_level !== 'edit') {
+        return c.json<ApiResponse>(
+          {
+            success: false,
+            error: 'Access denied for task update',
+          },
+          403
+        );
+      }
     }
 
     // Build update query
@@ -407,11 +456,17 @@ tasksBase.patch('/:id', async (c) => {
         .run();
     }
 
-    updates.push('updated_at = datetime(\'now\')');
+    updates.push("updated_at = datetime('now')");
 
     if (updates.length > 0) {
-      params.push(taskId, user.id);
-      const query = `UPDATE tasks SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`;
+      let query: string;
+      if (isOwner) {
+        params.push(taskId, user.id);
+        query = `UPDATE tasks SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`;
+      } else {
+        params.push(taskId);
+        query = `UPDATE tasks SET ${updates.join(', ')} WHERE id = ?`;
+      }
       await db.prepare(query).bind(...params).run();
 
       // Record update in history (for non-status fields)

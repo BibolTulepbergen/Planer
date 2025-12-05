@@ -24,16 +24,37 @@ import {
 import { useTasks } from '../context/TasksContext';
 import { TaskCard } from '../components/Tasks/TaskCard';
 import { TaskDialog } from '../components/Tasks/TaskDialog';
-import type { TaskWithTags, TaskStatus, CreateTaskRequest, UpdateTaskRequest } from '../types';
+import { TaskShareDialog } from '../components/Tasks/TaskShareDialog';
+import type {
+  TaskWithTags,
+  TaskStatus,
+  CreateTaskRequest,
+  UpdateTaskRequest,
+  ShareTaskRequest,
+} from '../types';
 
 export const WeekPage = () => {
-  const { tasks, loading, error, tags, createTask, updateTask, deleteTask, archiveTask, duplicateTask } = useTasks();
+  const {
+    tasks,
+    loading,
+    error,
+    tags,
+    createTask,
+    updateTask,
+    deleteTask,
+    archiveTask,
+    duplicateTask,
+    shareTask,
+    removeSharedTask,
+  } = useTasks();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskWithTags | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<TaskWithTags | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [defaultDate, setDefaultDate] = useState<string | undefined>(undefined);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [taskToShare, setTaskToShare] = useState<TaskWithTags | null>(null);
 
   // Get week start (Monday)
   const getWeekStart = (date: Date) => {
@@ -108,6 +129,11 @@ export const WeekPage = () => {
     setDeleteDialogOpen(true);
   };
 
+  const handleRemoveSharedTask = (task: TaskWithTags) => {
+    setTaskToDelete(task);
+    setDeleteDialogOpen(true);
+  };
+
   const handleDuplicateTask = async (task: TaskWithTags) => {
     try {
       await duplicateTask(task.id);
@@ -127,7 +153,11 @@ export const WeekPage = () => {
   const confirmDelete = async () => {
     if (taskToDelete) {
       try {
-        await deleteTask(taskToDelete.id, true);
+        if (taskToDelete.is_shared) {
+          await removeSharedTask(taskToDelete.id);
+        } else {
+          await deleteTask(taskToDelete.id, true);
+        }
         setDeleteDialogOpen(false);
         setTaskToDelete(null);
       } catch (error) {
@@ -155,6 +185,15 @@ export const WeekPage = () => {
     } catch (error) {
       console.error('Error updating task status:', error);
     }
+  };
+
+  const handleShareTask = (task: TaskWithTags) => {
+    setTaskToShare(task);
+    setShareDialogOpen(true);
+  };
+
+  const handleShareSave = async (taskId: number, data: ShareTaskRequest) => {
+    await shareTask(taskId, data);
   };
 
   const formatDayHeader = (date: Date) => {
@@ -309,6 +348,8 @@ export const WeekPage = () => {
                         onArchive={handleArchiveTask}
                         onDuplicate={handleDuplicateTask}
                         onStatusChange={handleStatusChange}
+                        onShare={handleShareTask}
+                        onRemoveShared={handleRemoveSharedTask}
                       />
                     ))}
                     {completedTasks.map((task) => (
@@ -320,6 +361,8 @@ export const WeekPage = () => {
                         onArchive={handleArchiveTask}
                         onDuplicate={handleDuplicateTask}
                         onStatusChange={handleStatusChange}
+                        onShare={handleShareTask}
+                        onRemoveShared={handleRemoveSharedTask}
                       />
                     ))}
                     {dayTasks.length === 0 && (
@@ -365,10 +408,14 @@ export const WeekPage = () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Удалить задачу?</DialogTitle>
+        <DialogTitle>
+          {taskToDelete?.is_shared ? 'Удалить задачу из вашего списка?' : 'Удалить задачу?'}
+        </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Задача "{taskToDelete?.title}" будет перемещена в архив. Вы сможете восстановить её позже.
+            {taskToDelete?.is_shared
+              ? `Задача "${taskToDelete?.title}" будет удалена только из вашего списка. Оригинал останется у владельца.`
+              : `Задача "${taskToDelete?.title}" будет перемещена в архив. Вы сможете восстановить её позже.`}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -378,6 +425,14 @@ export const WeekPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Share Task Dialog */}
+      <TaskShareDialog
+        open={shareDialogOpen}
+        task={taskToShare}
+        onClose={() => setShareDialogOpen(false)}
+        onShare={handleShareSave}
+      />
     </Box>
   );
 };

@@ -19,6 +19,7 @@ import {
   ContentCopy as ContentCopyIcon,
   Archive as ArchiveIcon,
   MoreVert as MoreVertIcon,
+  Share as ShareIcon,
 } from '@mui/icons-material';
 import type { TaskWithTags, TaskStatus } from '../../types';
 
@@ -29,6 +30,8 @@ interface TaskCardProps {
   onArchive?: (task: TaskWithTags) => void;
   onDuplicate?: (task: TaskWithTags) => void;
   onStatusChange?: (task: TaskWithTags, status: TaskStatus) => void;
+  onShare?: (task: TaskWithTags) => void;
+  onRemoveShared?: (task: TaskWithTags) => void;
 }
 
 const priorityColors = {
@@ -53,9 +56,21 @@ const statusLabels = {
   canceled: 'Отменено',
 };
 
-export const TaskCard = ({ task, onEdit, onDelete, onArchive, onDuplicate, onStatusChange }: TaskCardProps) => {
+export const TaskCard = ({
+  task,
+  onEdit,
+  onDelete,
+  onArchive,
+  onDuplicate,
+  onStatusChange,
+  onShare,
+  onRemoveShared,
+}: TaskCardProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
+
+  const isShared = !!task.is_shared;
+  const canEdit = !isShared || task.share_access === 'edit';
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -75,13 +90,27 @@ export const TaskCard = ({ task, onEdit, onDelete, onArchive, onDuplicate, onSta
     if (onDuplicate) onDuplicate(task);
   };
 
+  const handleDelete = () => {
+    handleMenuClose();
+    if (isShared) {
+      if (onRemoveShared) onRemoveShared(task);
+    } else {
+      if (onDelete) onDelete(task);
+    }
+  };
+
   const handleArchive = () => {
     handleMenuClose();
     if (onArchive) onArchive(task);
   };
 
+  const handleShare = () => {
+    handleMenuClose();
+    if (onShare) onShare(task);
+  };
+
   const handleStatusToggle = () => {
-    if (onStatusChange) {
+    if (onStatusChange && canEdit) {
       const newStatus: TaskStatus = task.status === 'done' ? 'planned' : 'done';
       onStatusChange(task, newStatus);
     }
@@ -112,6 +141,7 @@ export const TaskCard = ({ task, onEdit, onDelete, onArchive, onDuplicate, onSta
           <Checkbox
             checked={task.status === 'done'}
             onChange={handleStatusToggle}
+            disabled={!canEdit}
             sx={{ mt: -1 }}
           />
           <Box sx={{ flex: 1 }}>
@@ -198,7 +228,16 @@ export const TaskCard = ({ task, onEdit, onDelete, onArchive, onDuplicate, onSta
                 horizontal: 'right',
               }}
             >
-              {onEdit && (
+              {!isShared && onShare && (
+                <MenuItem onClick={handleShare}>
+                  <ListItemIcon>
+                    <ShareIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Поделиться</ListItemText>
+                </MenuItem>
+              )}
+
+              {onEdit && canEdit && (
                 <MenuItem onClick={handleEdit}>
                   <ListItemIcon>
                     <EditIcon fontSize="small" />
@@ -206,7 +245,8 @@ export const TaskCard = ({ task, onEdit, onDelete, onArchive, onDuplicate, onSta
                   <ListItemText>Редактировать</ListItemText>
                 </MenuItem>
               )}
-              {onDuplicate && (
+
+              {onDuplicate && !isShared && (
                 <MenuItem onClick={handleDuplicate}>
                   <ListItemIcon>
                     <ContentCopyIcon fontSize="small" />
@@ -214,12 +254,24 @@ export const TaskCard = ({ task, onEdit, onDelete, onArchive, onDuplicate, onSta
                   <ListItemText>Дублировать</ListItemText>
                 </MenuItem>
               )}
-              {onArchive && (
+
+              {onArchive && !isShared && (
                 <MenuItem onClick={handleArchive}>
                   <ListItemIcon>
                     <ArchiveIcon fontSize="small" sx={{ color: '#ff9800' }} />
                   </ListItemIcon>
                   <ListItemText>В архив</ListItemText>
+                </MenuItem>
+              )}
+
+              {(onDelete || onRemoveShared) && (
+                <MenuItem onClick={handleDelete}>
+                  <ListItemIcon>
+                    <DeleteIcon fontSize="small" sx={{ color: '#f44336' }} />
+                  </ListItemIcon>
+                  <ListItemText>
+                    {isShared ? 'Удалить у себя' : 'Удалить'}
+                  </ListItemText>
                 </MenuItem>
               )}
             </Menu>
