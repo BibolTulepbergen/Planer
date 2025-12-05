@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -6,6 +7,10 @@ import {
   Chip,
   IconButton,
   Checkbox,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -13,6 +18,7 @@ import {
   Flag as FlagIcon,
   ContentCopy as ContentCopyIcon,
   Archive as ArchiveIcon,
+  MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 import type { TaskWithTags, TaskStatus } from '../../types';
 
@@ -48,6 +54,32 @@ const statusLabels = {
 };
 
 export const TaskCard = ({ task, onEdit, onDelete, onArchive, onDuplicate, onStatusChange }: TaskCardProps) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleEdit = () => {
+    handleMenuClose();
+    if (onEdit) onEdit(task);
+  };
+
+  const handleDuplicate = () => {
+    handleMenuClose();
+    if (onDuplicate) onDuplicate(task);
+  };
+
+  const handleArchive = () => {
+    handleMenuClose();
+    if (onArchive) onArchive(task);
+  };
+
   const handleStatusToggle = () => {
     if (onStatusChange) {
       const newStatus: TaskStatus = task.status === 'done' ? 'planned' : 'done';
@@ -146,26 +178,51 @@ export const TaskCard = ({ task, onEdit, onDelete, onArchive, onDuplicate, onSta
           </Box>
 
           <Box>
-            {onEdit && (
-              <IconButton size="small" onClick={() => onEdit(task)}>
-                <EditIcon fontSize="small" />
-              </IconButton>
-            )}
-            {onDuplicate && (
-              <IconButton size="small" onClick={() => onDuplicate(task)} title="Дублировать">
-                <ContentCopyIcon fontSize="small" />
-              </IconButton>
-            )}
-            {onArchive && (
-              <IconButton size="small" onClick={() => onArchive(task)} title="Архивировать">
-                <ArchiveIcon fontSize="small" />
-              </IconButton>
-            )}
-            {onDelete && (
-              <IconButton size="small" onClick={() => onDelete(task)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            )}
+            <IconButton 
+              size="small" 
+              onClick={handleMenuClick}
+              aria-label="меню действий"
+            >
+              <MoreVertIcon fontSize="small" />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={menuOpen}
+              onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+            >
+              {onEdit && (
+                <MenuItem onClick={handleEdit}>
+                  <ListItemIcon>
+                    <EditIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Редактировать</ListItemText>
+                </MenuItem>
+              )}
+              {onDuplicate && (
+                <MenuItem onClick={handleDuplicate}>
+                  <ListItemIcon>
+                    <ContentCopyIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Дублировать</ListItemText>
+                </MenuItem>
+              )}
+              {onArchive && (
+                <MenuItem onClick={handleArchive}>
+                  <ListItemIcon>
+                    <ArchiveIcon fontSize="small" sx={{ color: '#ff9800' }} />
+                  </ListItemIcon>
+                  <ListItemText>В архив</ListItemText>
+                </MenuItem>
+              )}
+            </Menu>
           </Box>
         </Box>
       </CardContent>
