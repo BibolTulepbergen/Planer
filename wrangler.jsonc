@@ -14,7 +14,7 @@
 		"enabled": true
 	},
 	"vars": {
-		"MY_NAME": "Moldahasank",
+		"MY_NAME": "BibolTulepbergen",
 		"PUBLIC_JWK_CACHE_KEY": "firebase-jwk-cache"
 	},
 	/**
@@ -94,6 +94,10 @@
 					"remote": true
 				}
 			],
+			"vars": {
+		"MY_NAME": "BibolTulepbergen-dev",
+		"PUBLIC_JWK_CACHE_KEY": "firebase-jwk-cache"
+	},
 			"kv_namespaces": [
 				{
 					"binding": "PUBLIC_JWK_CACHE_KV",
