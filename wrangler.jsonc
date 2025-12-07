@@ -95,7 +95,7 @@
 				}
 			],
 			"vars": {
-		"MY_NAME": "BibolTulepbergen-dev",
+		"MY_NAME": "BibolT-dev",
 		"PUBLIC_JWK_CACHE_KEY": "firebase-jwk-cache"
 	},
 			"kv_namespaces": [
