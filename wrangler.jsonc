@@ -87,7 +87,7 @@
 		"dev": {
 			"d1_databases": [
 				{
-					"binding": "DataBase",
+					"binding": "DataBase-dev",
 					"database_name": "planer-db-dev",
 					"database_id": "78009d72-a9a2-42bd-9b22-e4c9ec6adb14",
 					"migrations_dir": "migrations",
