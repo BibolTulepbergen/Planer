@@ -33,7 +33,7 @@
 		{
 			"binding": "DataBase",
 			"database_name": "planer-db",
-			"database_id": "95f2e9ac-075e-487b-92ed-623fbc5d8be4",
+			"database_id": "5f2e9ac-075e-487b-92ed-623fbc5d8be4",
 			"migrations_dir": "migrations",
 			"remote": true
 		}
