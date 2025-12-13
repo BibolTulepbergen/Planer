@@ -6,13 +6,14 @@
 	"scripts": {
 		"dev": "cross-env CLOUDFLARE_ENV=dev vite",
 		"build": "tsc -b && vite build",
+		"build:mobile": "cross-env VITE_API_BASE_URL=https://planer.moldahasank.workers.dev/api tsc -b && vite build",
 		"lint": "eslint .",
 		"preview": "npm run build && vite preview",
 		"deploy": "npm run build && wrangler deploy --env dev",
 		"cf-typegen": "wrangler types --env dev",
 		"cap:sync": "npx cap sync",
 		"cap:open:android": "npx cap open android",
-		"cap:android": "npm run build && npx cap sync && npx cap open android",
+		"cap:android": "npm run build:mobile && npx cap sync && npx cap open android",
 		"db:migrate": "npx wrangler d1 migrations apply planer-db-dev --env dev --remote",
 		"db:migrate:local": "npx wrangler d1 migrations apply planer-db-dev --env dev --local",
 		"db:list": "npx wrangler d1 migrations list planer-db-dev --env dev --remote"
