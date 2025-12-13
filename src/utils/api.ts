@@ -1,14 +1,29 @@
 // API client with automatic JWT token injection
-
-// Use environment variable to determine API base URL
-// For Capacitor builds, use full domain
-// For web builds, use relative path (same domain as the site)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  (import.meta.env.PROD ? '/api' : '/api');
+import { Capacitor } from '@capacitor/core';
 
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;
 }
+
+// Use full domain for native mobile apps, relative path for web
+const getApiBaseUrl = () => {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  
+  // If VITE_API_BASE_URL is explicitly set, use it
+  if (baseUrl) {
+    return `${baseUrl}/api`;
+  }
+  
+  // For native mobile apps, use the full domain
+  if (Capacitor.isNativePlatform()) {
+    return 'https://planer.moldahasank.workers.dev/api';
+  }
+  
+  // For web builds, use relative path
+  return '/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Make an authenticated API request

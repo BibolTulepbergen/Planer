@@ -27,6 +27,7 @@ import { useTasks } from '../context/TasksContext';
 import { TaskCard } from '../components/Tasks/TaskCard';
 import { TaskDialog } from '../components/Tasks/TaskDialog';
 import { TaskShareDialog } from '../components/Tasks/TaskShareDialog';
+import { shareTask as shareTaskPublic, getTaskShareUrl } from '../utils/share';
 import type {
   TaskWithTags,
   TaskStatus,
@@ -233,6 +234,18 @@ export const CalendarPage = () => {
 
   const handleShareSave = async (taskId: number, data: ShareTaskRequest) => {
     await shareTask(taskId, data);
+  };
+
+  const handlePublicShare = async (task: TaskWithTags) => {
+    try {
+      const shareUrl = getTaskShareUrl(task.id);
+      await shareTaskPublic({
+        title: task.title,
+        url: shareUrl,
+      });
+    } catch (error) {
+      console.error('Error sharing task:', error);
+    }
   };
 
   const currentMonthLabel = selectedDate.toLocaleDateString('ru-RU', {
@@ -461,6 +474,7 @@ export const CalendarPage = () => {
                       onDuplicate={handleDuplicateTask}
                   onStatusChange={handleStatusChange}
                   onShare={handleShareTask}
+                  onPublicShare={handlePublicShare}
                   onRemoveShared={handleRemoveSharedTask}
                     />
                   ))}

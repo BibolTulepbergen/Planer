@@ -20,6 +20,7 @@ import {
   Archive as ArchiveIcon,
   MoreVert as MoreVertIcon,
   Share as ShareIcon,
+  IosShare as IosShareIcon,
 } from '@mui/icons-material';
 import type { TaskWithTags, TaskStatus } from '../../types';
 
@@ -31,6 +32,7 @@ interface TaskCardProps {
   onDuplicate?: (task: TaskWithTags) => void;
   onStatusChange?: (task: TaskWithTags, status: TaskStatus) => void;
   onShare?: (task: TaskWithTags) => void;
+  onPublicShare?: (task: TaskWithTags) => void;
   onRemoveShared?: (task: TaskWithTags) => void;
 }
 
@@ -64,6 +66,7 @@ export const TaskCard = ({
   onDuplicate,
   onStatusChange,
   onShare,
+  onPublicShare,
   onRemoveShared,
 }: TaskCardProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -107,6 +110,11 @@ export const TaskCard = ({
   const handleShare = () => {
     handleMenuClose();
     if (onShare) onShare(task);
+  };
+
+  const handlePublicShare = () => {
+    handleMenuClose();
+    if (onPublicShare) onPublicShare(task);
   };
 
   const handleStatusToggle = () => {
@@ -234,6 +242,15 @@ export const TaskCard = ({
                     <ShareIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText>Поделиться</ListItemText>
+                </MenuItem>
+              )}
+
+              {!isShared && onPublicShare && (
+                <MenuItem onClick={handlePublicShare}>
+                  <ListItemIcon>
+                    <IosShareIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Публичная ссылка</ListItemText>
                 </MenuItem>
               )}
 
