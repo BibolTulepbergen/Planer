@@ -1,8 +1,10 @@
 // API client with automatic JWT token injection
 
-const API_BASE_URL = import.meta.env.PROD 
-  ? 'https://planer.moldahasank.workers.dev/api'
-  : '/api';
+// Use environment variable to determine API base URL
+// For Capacitor builds, use full domain
+// For web builds, use relative path (same domain as the site)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (import.meta.env.PROD ? '/api' : '/api');
 
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;
