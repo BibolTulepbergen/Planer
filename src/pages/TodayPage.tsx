@@ -17,6 +17,7 @@ import { useTasks } from '../context/TasksContext';
 import { TaskCard } from '../components/Tasks/TaskCard';
 import { TaskDialog } from '../components/Tasks/TaskDialog';
 import { TaskShareDialog } from '../components/Tasks/TaskShareDialog';
+import { shareTask as shareTaskPublic, getTaskShareUrl } from '../utils/share';
 import type {
   TaskWithTags,
   TaskStatus,
@@ -123,6 +124,18 @@ export const TodayPage = () => {
     await shareTask(taskId, data);
   };
 
+  const handlePublicShare = async (task: TaskWithTags) => {
+    try {
+      const shareUrl = getTaskShareUrl(task.id);
+      await shareTaskPublic({
+        title: task.title,
+        url: shareUrl,
+      });
+    } catch (error) {
+      console.error('Error sharing task:', error);
+    }
+  };
+
   // Filter tasks for today
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -185,6 +198,7 @@ export const TodayPage = () => {
                       onDuplicate={handleDuplicateTask}
                       onStatusChange={handleStatusChange}
                       onShare={handleShareTask}
+                      onPublicShare={handlePublicShare}
                       onRemoveShared={handleRemoveSharedTask}
                     />
                   ))}
@@ -206,6 +220,7 @@ export const TodayPage = () => {
                       onDuplicate={handleDuplicateTask}
                       onStatusChange={handleStatusChange}
                       onShare={handleShareTask}
+                      onPublicShare={handlePublicShare}
                       onRemoveShared={handleRemoveSharedTask}
                     />
                   ))}
