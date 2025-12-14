@@ -3,12 +3,12 @@ import { getAuth } from 'firebase/auth';
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: 'AIzaSyDirYmKWrzlanDxWzdRmc_8jYEFzEOjuXc',
-  authDomain: 'planer-3e65e.firebaseapp.com',
-  projectId: 'planer-3e65e',
-  storageBucket: 'planer-3e65e.firebasestorage.app',
-  messagingSenderId: '992164725600',
-  appId: '1:992164725600:web:5f7a713af82451d07e1405',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
